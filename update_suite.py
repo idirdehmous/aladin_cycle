@@ -79,4 +79,7 @@ for fam in ["cycle", "lagged" ] :
 # TODO: suites without cycle rundate are possibly "looping" suites
 #       there, you must reset the RUNDATE variable
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> db99495... Fix update_suite.py for no-STHOST suites
