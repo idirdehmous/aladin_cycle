@@ -94,7 +94,11 @@
 &NAMCOSJO
 /
 &NAMCT0
+<<<<<<< HEAD
   LAROME=.TRUE.,
+=======
+!  LAROME=.TRUE., ! ISBA fields required
+>>>>>>> a363418... add IAU setting in forecast namelist
   LNHDYN=.FALSE., ! setting to .TRUE. gives an error for PRESS.DEPART
   NSPPR=0,
   NFPOS=2,
@@ -160,6 +164,7 @@
 ! Only needed for ISBA initial file or for CANARI
             'SURFA.OF.OZONE','SURFB.OF.OZONE','SURFC.OF.OZONE',
             'SURFAEROS.SEA','SURFAEROS.LAND','SURFAEROS.SOOT','SURFAEROS.DESERT',
+<<<<<<< HEAD
 !            'SURFZ0.FOIS.G   ','SURFALBEDO      ','SURFEMISSIVITE  ','SURFET.GEOPOTENT',
 !            'SURFPROP.VEGETAT','SURFVAR.GEOP.ANI','SURFVAR.GEOP.DIR',
 !            'SURFIND.VEG.DOMI','SURFRESI.STO.MIN','SURFPROP.ARGILE ','SURFPROP.SABLE  ',
@@ -168,6 +173,16 @@
 !            'SURFALBEDO NEIGE','SURFALBEDO.SOLNU','SURFALBEDO.VEG',
   NRFP3S={levels},
   NFPCLI=2, 
+=======
+            'SURFZ0.FOIS.G   ','SURFALBEDO      ','SURFEMISSIVITE  ','SURFET.GEOPOTENT',
+            'SURFPROP.VEGETAT','SURFVAR.GEOP.ANI','SURFVAR.GEOP.DIR',
+            'SURFIND.VEG.DOMI','SURFRESI.STO.MIN','SURFPROP.ARGILE ','SURFPROP.SABLE  ',
+            'SURFEPAIS.SOL   ','SURFIND.FOLIAIRE','SURFRES.EVAPOTRA','SURFGZ0.THERM   ',
+            'SURFRESERV.INTER','PROFRESERV.GLACE','SURFRESERV.GLACE','SURFDENSIT.NEIGE',
+            'SURFALBEDO NEIGE','SURFALBEDO.SOLNU','SURFALBEDO.VEG',
+  NRFP3S={levels},
+  NFPCLI=3, ! get ISBA fields from clim
+>>>>>>> a363418... add IAU setting in forecast namelist
   LFPQ=.FALSE., 
   RFPCORR=50000.,
   RFPCSAB=100.,

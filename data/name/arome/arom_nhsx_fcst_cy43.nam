@@ -357,7 +357,16 @@
  &NAMGWWMS
  /
  &NAMIAU
+<<<<<<< HEAD
  /
+=======
+  LIAU=.FALSE. ,
+  TSTARTIAU=0.,
+  TSTOPIAU=3600. ,
+  ALPHAIAU=1.,
+ /
+
+>>>>>>> a363418... add IAU setting in forecast namelist
  &NAMICE
  /
  &NAMINI
