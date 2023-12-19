@@ -1,0 +1,24 @@
+@manual
+This maintenance script switches the suite to "delayed" mode. In this mode,
+time and external triggers are ignored.
+
+If a realtime suite is delayed more than e.g. 24h, other problems may arise like
+LBC and OBS no longer being available.
+
+Use this if the model needs to be re-run after the operational time window.
+
+This task should only be triggered by setting the "DELAY" event.
+That can be done manually or automatically during the initialisation of a cycle.
+
+@end
+@include <@HEAD:head.h@>
+
+ecflow_client --alter=change variable DELAY "yes" /@SUITE@
+## remove "-r" from QSUBOPT (don't use reserved queue in delayed mode)
+#if [[ @MODE@ == "oper" ]] ; then
+#  ecflow_client --alter=change variable SUBMIT_OPT " " /@SUITE@
+#fi
+ecflow_client --requeue  /@SUITE@/@FAMILY@/reset_delay
+
+@include <@TAIL:tail.h@>
+

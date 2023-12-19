@@ -1,0 +1,21 @@
+@manual
+This is a lagged task to clean up the acquisition data (mainly LBC data) in TCWORK. By default, such data is retained for 2 days (48h).
+
+@end
+
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+# how long can data stay on TCWORK?
+# "find" works in days
+GRACE=@GRACE:2@
+
+# pretty sure there must be a more elegant way to do this...
+ac_path=$(dirname @CPL_TEMPLATE@)
+#ac_path=$TCWORK/acquisition
+find $ac_path -mtime +$GRACE -exec rm  {} \;
+
+
+@include <@TAIL:tail.h@>
+

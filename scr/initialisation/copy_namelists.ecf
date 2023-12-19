@@ -1,0 +1,29 @@
+#! /bin/bash
+@manual
+This job copies the namelists and a few other small files that are on the ecflow server side, to the HPC working directory. This has to run every cycle, because the data is stored on non-permanent $SCRATCH. On ATOS, the directories are shared, so there is no need of ssh/scp.
+
+If this job fails, make sure the HPC directories are consistent. 
+Try re-running init_suite/create_hpc_paths before re-running this task.
+
+This task uses scp rather than rsync, because rsync requires bi-directional ssh keys rather than just ecflow server to HPC. On ECMWF Atos they actually share their home directory, but that is not always the case.
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+# We prefer to run as a "local" job on the ecflow server side
+# and use scp rather than rsync: no 2-way ssh keys needed.
+# this will not work for TC tasks (replace ssh by version with explicit STHOST)
+HPC_USER=@HPC_USER:$USER@
+ssh -l $HPC_USER $SCHOST mkdir -p $d_NAMELIST
+scp -r @SUITE_DATA@/name/$NAMELIST_VERSION/* ${HPC_USER}@@${SCHOST}:$d_NAMELIST
+if [ @DPATH_TOOLS:""@ == "" ] ; then
+  ssh -l $HPC_USER $SCHOST mkdir -p $d_TOOLS
+  scp -r @SUITE_DATA@/tools/* ${HPC_USER}@@${SCHOST}:$d_TOOLS
+fi
+# on ATOS:
+#mkdir -p $d_NAMELIST
+#rsync @SUITE_DATA@/name/${NAMELIST_VERSION}/ $d_NAMELIST
+
+@include <@TAIL:tail.h@>

@@ -1,0 +1,119 @@
+#!/bin/bash
+@manual
+DESCRIPTION:
+Monitor the progress of the model integration.
+This task runs on HPC and checks progress every X seconds.
+If the integration task fails, this task will also abort.
+
+If the forecast uses an IO SERVER (AR13, AO13), this task will
+gather the partial output files before signalling ecflow.
+
+NOTE: if the forecast is re-started, make sure this task is also restarted!
+
+DEPENDENT ON:
+This task is triggered by the starting of the model integration. 
+While waiting for next output, this task uses ecflow_client to check whether the integration is still running.
+
+CONSOLE:
+If this task fails, it is most probable that the integration task also failed.
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+# the node corresponding to the actual model integration:
+FCTASK=/@SUITE@/@FAMILY@/integration
+
+cd ${d_FC}
+
+# ECHALAD file contains last finished lead time in 4 digits (e.g. 0000 to 0048)
+# with IO server, different file name and path!
+if (( $NPROC_IO > 0 )) ; then
+  LDT_FILE="io_serv.000001.d/ECHIS"
+else
+  LDT_FILE="ECHALAD"
+fi
+
+# monitor forecast progress
+hh=-1
+OK=1
+while [[ $OK == 1 ]] ; do
+  if [[ -e ${LDT_FILE} ]] ; then
+    hh2=`cat $LDT_FILE`
+    if (( 10#$hh2 > 10#$hh )) ; then
+      # we have progressed 1 (or more!) hours
+      echo "step $hh2 `date -u `"
+      # IF we are using an IO SERVER, this is a good moment to "gather"
+      if (( $NPROC_IO > 0 )) ; then
+        sleep 5 # wait for all files to be ready
+        # make sure we don't skip an hour
+        # FIXME: only works for hourly output
+        for hh1 in $(seq -f %02g $(( 10#$hh + 1 )) 1 $hh2 ) ; do
+          echo "gathering $hh1 `date +%H:%M:%S`"
+          ${d_BIN}/lfitools facat all \
+            io_serv.000*/ICMSH${CNMEXP}+00${hh1}.gridall \
+            io_serv.000*/ICMSH${CNMEXP}+00${hh1}.speca.???? \
+            ICMSH${CNMEXP}+00${hh1}.tot
+          mv ICMSH${CNMEXP}+00${hh1}.tot ICMSH${CNMEXP}+00${hh1}
+          sync ICMSH${CNMEXP}+00${hh1}
+          echo "OK $hh1 `date +%H:%M:%S`"
+
+        # NOTE: sfx seems to write a part to the root directory as well...
+        # file ${d_FC}/ICMSH${CNMEXP}+00${hh} exists but is incomplete
+        #
+        # This will probably only be run for "first guess" lead times (+3h)
+        # BEWARE: THIS "MODIFIES" the (incomplete) .sfx file
+#        if [[ $SURFACE == "surfex"  && $hh == "03" ]] ; then
+#        if [ -e ${d_FC}/io_serv.000001.d/ICMSH${CNMEXP}+00${hh1}.sfx ] ; then
+          if [ -e ICMSH${CNMEXP}+00${hh1}.sfx ] ; then
+            ${d_BIN}/lfitools facat all \
+              ICMSH${CNMEXP}+00${hh1}.sfx  \
+              io_serv.000*/ICMSH${CNMEXP}+00${hh1}.sfx \
+              ICMSH${CNMEXP}+00${hh1}.sfx.tot
+            mv ICMSH${CNMEXP}+00${hh1}.sfx.tot ICMSH${CNMEXP}+00${hh1}.sfx
+            sync ICMSH${CNMEXP}+00${hh1}.sfx
+          fi
+          ecflow_client --meter forecast_counter $hh1
+        done
+
+      else
+        # No gathering of partial files required
+        # just advance the counter
+        ecflow_client --meter forecast_counter $hh2
+      fi
+      hh=$hh2
+    else
+      echo "forecast still at $hh"
+      sleep 5
+    fi
+  else
+    echo "forecast has not yet progressed to 00 output"
+    sleep 5
+  fi
+  # did we reach end of forecast?
+  (( 10#$hh == 10#$HOURRANGE )) && break
+
+  # is the forecast still running? Check in ecflow.
+  s0=`ecflow_client --get_state=$FCTASK | grep "task integration"`
+# this line still contains various parts, including e.g. "state:complete"
+  s1=${s0#*state:}
+  fcstate=${s1%% *}
+  case $fcstate in
+    aborted|queued) OK=0 ;;
+    complete|active) ;;
+    *) OK=0 ;;
+  esac
+done
+
+if (( 10#$hh == 10#$HOURRANGE )) ; then
+  echo "forecast FINISHED `date`"
+else
+  echo "forecast STOPPED? `date`"
+  exit 1
+fi
+
+@include <@TAIL:tail.h@>
+

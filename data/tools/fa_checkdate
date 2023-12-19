@@ -1,0 +1,80 @@
+#! /usr/bin/env python3
+# read the date information and lead time from a FA file
+# return YYYYMMDDRR+HH
+import sys
+
+# TODO: options to return rundate, lead time or valid date?
+fname = sys.argv[1]
+
+# from file header: section size in 8-byte words
+f1 = open(fname, "rb")
+f1.seek(0)
+section_size = 8*int.from_bytes(f1.read(8), byteorder='big')
+#print("Section size: "+str(section_size))
+# TODO: check that this is a valid FA file (read parts of the header)
+
+# Normally "DATE-DES-DONNEES" is the 7th field in the list
+# Second-resolution data (if present) is in "DATX-DES-DONNEES"
+f1.seek(section_size)
+i=0
+i1=0
+i2=0
+while i1==0 and i2==0 and i < 10 :
+  ww = f1.read(16)
+  if ww == b"DATE-DES-DONNEES" :
+    i1 = i
+  if ww == b"DATX-DES-DONNEES" :
+    print("Found second-based info.")
+    i2 = i
+  i = i + 1
+
+if i1 == 0 :
+  print("DATE-DES-DONNEES field not found. Are you sure this is a regular FA file?")
+  exit()
+
+#if i2 == 0 :
+#  print("DATX-DES-DONNEES field not found. No sub-hourly information available.")
+
+
+# BASIC
+# now find the byte location 
+f1.seek(2*section_size + i1*16 )
+date_len = int.from_bytes(f1.read(8), byteorder='big') # ==11
+date_loc = int.from_bytes(f1.read(8), byteorder='big')
+# jump to data and read 11 integers (8 byte, big-endian)
+f1.seek(8*(date_loc-1))
+# read 11 integers
+date_fields=[ int.from_bytes(f1.read(8), byteorder='big') for i in range(0, date_len) ]
+
+# COUNT IN SECONDS
+if i2 > 0 :
+  f1.seek(2*section_size + 2*16 )
+  date_len = int.from_bytes(f1.read(8), byteorder='big') # ==11
+  date_loc = int.from_bytes(f1.read(8), byteorder='big')
+  #print(str(date_len))
+  f1.seek(8*(date_loc-1))
+  date_fields2=[ int.from_bytes(f1.read(8), byteorder='big') for i in range(0,date_len) ]
+  ss = date_fields2[2] # seconds for run time (usually 0)
+  lt_ss = date_fields2[3] # lead time in seconds
+  # fields 4-5 are P1-P2 in seconds (for time intervals)
+  
+f1.close()
+
+# run date/time:
+yyyy = str(date_fields[0]).zfill(4)
+mm   = str(date_fields[1]).zfill(2)
+dd   = str(date_fields[2]).zfill(2)
+rr   = str(date_fields[3]).zfill(2)
+MM   = str(date_fields[4]).zfill(2) # usually 00
+
+# lead time is usually in hours, but not always!
+if date_fields[5] == 0 : # minutes
+  lt = str(date_fields[6]).zfill(2)+" minutes"
+if date_fields[5] == 1 : # hours
+  lt = str(date_fields[6]).zfill(2)+" hours"
+if date_fields[5] == 254 : # seconds, requires DATX-DES-DONNEES
+  lt = str(date_fields2[3]).zfill(2)+" seconds"
+
+print("{0}-{1}-{2}T{3}:{4}Z + {5}".format(yyyy, mm, dd, rr, MM, lt))
+
+

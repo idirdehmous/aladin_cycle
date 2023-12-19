@@ -1,0 +1,41 @@
+#! /usr/bin/bash
+@manual
+DESCRIPTION
+This script switches the SCHOST for all suites in the management list.
+
+1) first change variable SCHOST in the master suite (not the label!)
+2) then run this task to modify all suites & also set the local label
+
+This script will fail if there are still jobs running or submitted!
+
+
+@end
+
+@include <@HEAD:head.h@>
+@include <settings_common.h>
+
+SCHOST=@SCHOST@
+
+echo "Switching all suites to $SCHOST"
+
+# change local label
+ecflow_client --alter=change label SCHOST $SCHOST /@SUITE@
+
+for suite in @SUITE_LIST@ ; do
+  state=`@ECF_HOME@/../bin/ecf_node_query /$suite`
+  case $state in
+    active|submitted ) 
+      show_warning "ERROR: suite $suite has running tasks!"
+      echo "ERROR: suite $suite has running or submitted tasks!"
+      exit 1
+      ;;
+    * )
+      ecflow_client --alter=change variable SCHOST $SCHOST /$suite
+      ecflow_client --alter=change label SCHOST $SCHOST /$suite
+      ;;
+  esac
+done
+
+
+@include <@TAIL:tail.h@>
+

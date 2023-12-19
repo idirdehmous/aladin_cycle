@@ -1,0 +1,11 @@
+@manual
+Placeholder script. On some platforms, a log server is needed.
+@end
+@include <@HEAD:head.h@>
+# Start the logserver if it isn't running yet.
+# NOTE: it must run on ECF_LOGHOST, not on a compute node!
+HPC_USER=@HPC_USER:$USER@
+ssh -l @HPC_USER@ @ECF_LOGHOST@ "module load ecflow/@ECF_VERSION@ ; ecflow_logserver.sh -p @ECF_LOGPORT@ "
+
+@include <@TAIL:tail.h@>
+

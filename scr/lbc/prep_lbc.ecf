@@ -1,0 +1,161 @@
+#! /bin/bash
+@manual
+DESCRIPTION:
+This task prepares the LBCs (boundary conditions) for the forecast.
+The input data (made available by the retrieve_lbc task) is interpolated to the model grid using the 903 configuration.
+
+This is a single call to the 903 executable that handles all hourly LBCs for the forecast. A small monitoring script is called after every file to signal ecFlow and move the file to other directory.
+
+DEPENDENENT ON:
+This task uses the data that was first checked in retrieve_lbc task.
+
+CONSOLE:
+If this task fails, 
+    - check that retrieve_lbc task has completed correctly.
+    - look at lbc_counter and output. If the task fails consistently at a particular LBC, the input file may be corrupted (retrieve_lbc only checks the header). If so,
+      + AO40 : warn RMI asap, they manage retrieval of MeteoFrance coupling data.
+
+Do not set complete, as this will cause the forecast to fail.
+
+ANALYSTS:
+
+
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+set -x
+
+NAMELIST="$( for nn in $NAMELIST_PRE ; do echo ${d_NAMELIST}/$nn ; done )"
+
+LBC_LAG=$(( 10#$RR % 6 ))
+
+CLIM_IN=${d_CLIM}/${COUPLING_DOMAIN}_
+CLIM_OUT=${d_CLIM}/${DOMAIN}_
+
+# with e.g. 3h coupling, you need the 12h LBC for a 10h forecast!
+#       so (only) in this task we extend HOURRANGE if necessary.
+if (( $HOURRANGE % $LBC_INC != 0 )) ; then
+  HOURRANGE=$(( $HOURRANGE + $LBC_INC ))
+fi
+
+hhlist=$(seq -f%02g 0 ${LBC_INC} $HOURRANGE )
+
+# FIXME: may not work on some platforms (ECCODES_DIR must be defined)
+export ECCODES_SAMPLE_PATH=${ECCODES_DIR}/share/eccodes/ifs_samples/grib1_mlgrib2
+export ECCODES_DEFINITION_PATH=${ECCODES_DIR}/share/eccodes/definitions
+
+# prepare directory
+WDIR=${d_LBC}/e903
+mkdir -p ${WDIR}
+rm -f $WDIR/* 2>/dev/null
+cd ${WDIR}
+ 
+# Bring coupling file
+# Bring climate files
+# TODO: maybe some other cases also have NFCLIM=2 (only target CLIM)
+#VDATE=$RUNDATE # `dateincr -h $RUNDATE +$hh`
+#MM2=`echo $VDATE | cut -c 5-6`
+ln -sf ${CLIM_OUT}$MM const.clim.${DOMAIN}
+d_INPUT=${d_LBC}/input
+if [[ ${COUPLING_DOMAIN} == "EC" ]] ; then
+  # LBC's are in the form of HRES global output
+  #d_INPUT=$SCRATCH/LBC/ec/$RR/input
+  CPL=E903
+  ln -sf ${d_INPUT}/ICMSH${CPL}+000000 ICMSH${CPL}INIT
+  ln -sf ${d_INPUT}/ICMGG${CPL}+000000 ICMGG${CPL}INIT
+  ln -sf ${d_INPUT}/ICMUA${CPL}+000000 ICMUA${CPL}INIT
+  for hh in $hhlist ; do
+    ln -sf ${d_INPUT}/ICMSH${CPL}+0000${hh} .
+    ln -sf ${d_INPUT}/ICMGG${CPL}+0000${hh} .
+    ln -sf ${d_INPUT}/ICMUA${CPL}+0000${hh} .
+  done
+else
+  ln -s ${CLIM_IN}$MM Const.Clim
+  CPL=$CNMEXP
+  ln -sf ${d_INPUT}/LBC_00 ICMSH${CPL}INIT
+  for hh in $hhlist ; do
+    ln -sf ${d_INPUT}/LBC_${hh} ICMSH${CPL}+00$hh
+  done
+
+fi
+
+# Bring rrtm data
+ln -sf ${DATADIR_RUNTIME}/* .
+  # RADRRTM (RADSRTM MCICA not really needed)
+  
+  # Create namelist file
+  # at 00h in downscaling mode, make sure we also have ISBA fields
+  # These are (may be) indicated by lines starting with !00
+  # TODO: with PP server, can we still get ISBA fields in ONLY the 00h LBC?
+  # FIXME: for now, we just add ISBA fields always (or never...)
+
+#  if [[ $hh = '00' && (${ASSIMILATION:-no} = 'no' || ${COLDSTART:0} = $RUNDATE ) ]] ; then 
+h0="" 
+#  else
+#    h0="!"
+#  fi
+NFRPOS=$(( $HOURRANGE + 1 ))
+
+monitor_script=`pwd`/monitor_script
+cat ${NAMELIST} | sed -e "s/^!00/${h0}/" | grep -v '^!' | sed \
+    -e "s/!.*//"  \
+    -e "s/NPROC=.*/NPROC=$NPROC/" \
+    -e "s/{nproc}/$NPROC/" \
+    -e "s/CNMEXP=.*/CNMEXP=$CPL/"  \
+    -e "s/CFPDOM(1)=.*/CFPDOM(1)=\'$DOMAIN\'/"  \
+    -e "s/NRFP3S=.*/NRFP3S=$(seq -s, 1 1 $NLEVELS)/" \
+    -e "s/NFRPOS=.*/NFRPOS=$NFRPOS/"    \
+    -e "s/NFPSERVER=.*/NFPSERVER=1/"    \
+    -e "s|CSCRIPT_PPSERVER=.*|CSCRIPT_PPSERVER=\'${monitor_script}\'|"  \
+  > fort.4
+
+# a script CSCRIPT_PPSERVER
+# - ecflow message
+# - rename & move
+# - prepare input from IOSERVER distributed output
+# - NOTE: this gets called BEFORE every file
+#         so you need to call once more to signal last file is ready
+cat > ${monitor_script} <<EOF
+#! /usr/bin/bash
+module load ecflow
+if [[ -e ECHFP ]] ; then
+  HH=\$(printf %02g \`cat ECHFP\`)
+  NLBC=\$(printf %03g \$(( 10#\$HH / $LBC_INC )))
+  echo "\$HH OK" >> monitor_log
+  mv PF${CPL}${DOMAIN}+00\$HH ${d_LBC}/ELSCF${CNMEXP}ALBC\$NLBC
+  ecflow_client --meter lbc_counter \$HH
+else
+  echo "First call, no output yet." >> monitor_log
+fi
+EOF
+chmod +x ./monitor_script
+
+# run
+
+if [ -e ${d_BIN}/MASTERODB_PRE ] ; then
+  ln -sf ${d_BIN}/MASTERODB_PRE MASTERODB
+else
+  ln -sf ${d_BIN}/MASTERODB MASTERODB
+fi
+$MPIRUN ./MASTERODB >out.log 2>err.log || {
+    echo "An error occured in 903."
+    ls -al
+    exit 1
+  }
+# last LBC
+bash ./monitor_script
+
+# communicate to ecflow server:
+#  [[ $hh -eq 0 ]] && ecflow_client --force=set ${event_path}:LAUNCH_00
+#  [[ $hh -eq 3 ]] && ecflow_client --force=set ${event_path}:LAUNCH_FC
+
+# clean-up
+# no cleaning needed in real-time
+# we can do it at the end of the cycle
+
+@include <@TAIL:tail.h@>
+

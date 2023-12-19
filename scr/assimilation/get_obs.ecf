@@ -1,0 +1,65 @@
+#! /bin/bash
+@manual
+This task will retrieve the SYNOP observations necessary for Data Assimilation.
+It accesses the operational BUFR file at /ec/vol/msbackup/ , which are copied
+to a local directory before reading.
+
+NOTE: those files are dynamic. If the task tries to copy them just at the moment they are being (re-)written,
+there may be an error (e.g. "stale file handle"). In this case, re-running the task will normally work OK.
+
+If it fails, first look at output.
+  - is the operational BUFR file available in /ec/vol/msbackup ?
+  - is there a problem with eccodes (bufr_copy) or the BUFR file (corrupted BUFR message)
+  - is the working directory available (ws1 or ws2)
+
+Final result should be files  <obstype>s_${RUNDATE}00.bufr.
+
+In case it is impossible to create the output BUFR file:
+  - warn RMI asap
+  - If all else fails, and there is no other way: set the whole assimilation family to complete. The Forecast family will then start. It will fail twice (missing analysis). But manually restarting a third time (ECF_TRYNO=3) it will continue by using the first guess (thus skipping assimilation alltogether).
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+cd ${d_OBS}
+ofile=synop_${RUNDATE}00.bufr
+rm -f $ofile
+
+OBS_PATH_REALTIME=/ec/vol/msbackup
+OBS_PATH_ARCHIVE=/ec/scratch/cv6/OBS/$YYYY/$MM/$DD
+
+if [[ $REALTIME == "yes" ]] ; then
+  # get 6h obs files from /ec/vol/msbackup/
+  case $RR in
+    00|06|12|18)
+    # just use the file for this instance
+      filelist=BUFR0001${RUNDATE}.DAT
+      ;;
+    03|09|15|21)
+    # at intermediate times, we combine two BUFR files
+#      rd1=`dateincr -h $RUNDATE -3 `
+#      rd2=`dateincr -h $RUNDATE +3 `
+      rd1=`date -u -d "${YYYY}${MM}${DD} ${RR} -3 hours" +%Y%m%d%H`
+      rd2=`date -u -d "${YYYY}${MM}${DD} ${RR} +3 hours" +%Y%m%d%H`
+      filelist="BUFR0001${rd1}.DAT BUFR0001${rd2}.DAT"
+      ;;
+  esac
+
+# Filter the BUFR files for dataCategory
+  for ff in $filelist ; do
+    for cat in 0 1 ; do
+      cp ${OBS_PATH_REALTIME}/$ff .
+      bufr_copy -w dataCategory=$cat $ff bufrtemp
+      cat bufrtemp >> $ofile
+    done
+    rm bufrtemp BUFR0001*
+  done
+else
+  # get archived data
+  cp ${OBS_PATH_ARCHIVE}/$ofile .
+fi
+
+@include <@TAIL:tail.h@>

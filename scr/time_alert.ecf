@@ -1,0 +1,15 @@
+@manual
+This task is triggered if the cycle runs too late.
+It merely raises an alert, it doesn't investigate, fix or re-queue anything.
+@include <manual_common.h>
+@end
+@include <@HEAD:head.h@>
+@include <settings.h>
+# Send an e-mail explicitly?
+
+# we now simply raise a warning message in the suite
+# if the "WARNING" label already exists, we overwrite it
+show_warning "$RUNDATE delayed!" /@SUITE@
+
+@include <@TAIL:tail.h@>
+

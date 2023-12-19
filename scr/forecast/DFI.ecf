@@ -1,0 +1,175 @@
+#!/bin/bash
+@manual
+DESCRIPTION:
+This is an alternative version of the forecast script, running ONLY the DFI step.
+
+DEPENDENT ON:
+
+If there is an assimilation cycle, it assumes a file "analysis" is available.
+If the model uses Surfex, there must also be a file "analysis_sfx".
+
+CONSOLE:
+Failure most likely is a result from missing or corrupted input files.
+
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+set -x
+
+# after a re-run, the progress counter is not reset (only reset with re-queue)
+# so for safety:
+
+ecflow_client --meter forecast_counter -1
+
+# Prepare directory
+WDIR=${d_DFI}
+mkdir -p $WDIR
+cd $WDIR
+
+# clean up
+# NOTE: recursive rm is needed for io_server temp directories
+rm -rf * 2>/dev/null
+
+# FOR DFI: always 3h coupling?
+# DFI window must be within first LBC file (1h or 3h)
+# with TAUS=10800 (3h), you get an optimal time window of ~2.08h 
+#       (doesn't change much with TSTEP)
+# So if CPLFREQ=1, you need to reduce the NSTDFI a little bit
+#       to keep the window <= 2h
+#       NSTDFI such that NSTDFI * TIMESTEP < CPLFREQ
+# OR set a lower TAUS=10400
+# OR use 3h coupling for DFI step (different effect)
+
+# LBC's
+DFI_CPL=@DFI_CPL:$LBC_INC@
+ln -sf ${d_LBC}/ELSCF${CNMEXP}ALBC000 ELSCF${CNMEXP}ALBC000
+ln -sf ${d_LBC}/ELSCF${CNMEXP}ALBC00${DFI_CPL} ELSCF${CNMEXP}ALBC001
+
+# INITIAL CONDITIONS
+# FIXME: should 0h coupling file be ==INIT or ==LBC000 ?
+if [[ $ASSIMILATION == "no" || $COLDSTART = $RUNDATE ]] ; then
+  init_atmo=${d_LBC}/ELSCF${CNMEXP}ALBC000
+  [[ $SURFACE == "surfex" ]] && init_sfx=${d_LBC}/ICMSH${CNMEXP}INIT.sfx
+else
+  # use analysis
+  if [[ -e ${d_GUESS}/analysis ]] ; then
+    init_atmo=${d_GUESS}/analysis
+    [[ $SURFACE == "surfex" ]] && init_sfx=${d_GUESS}/analysis_sfx
+  elif [[ $RUNMODE == oper && $ECF_TRYNO -ge 3 ]] ; then
+    # if we have already tried to re-run in an operational setting
+    # just use the first guess (better than no forecast...)? 
+    init_atmo=${d_GUESS}/first_guess_orig
+    [[ $SURFACE == "surfex" ]] && init_sfx=${d_GUESS}/first_guess_sfx
+  else
+    echo "No analysis found."
+    exit 1
+  fi
+fi
+
+ln -sf $init_atmo ICMSH${CNMEXP}INIT
+[[ $SURFACE == "surfex" ]] && ln -sf $init_sfx ICMSH${CNMEXP}INIT.sfx
+
+# space-consistent LBC's
+ln -sf ICMSH${CNMEXP}INIT ELSCF${CNMEXP}ALBC000
+
+# Bring executable
+if [[ -e  ${d_BIN}/MASTERODB_FC ]] ; then
+  ln -sf ${d_BIN}/MASTERODB_FC MASTERODB
+else
+  ln -sf ${d_BIN}/MASTERODB MASTERODB
+fi
+
+NAMELIST="$( for nn in $NAMELIST_FC ; do echo ${d_NAMELIST}/$nn ; done )"
+
+CPLFREQ=$(( 10#$DFI_CPL * 3600 ))
+
+# FIXME: we may be discarding NSTDFI settings...
+# ONLY change {nstdfi} if it exists?
+# HOW can this be implemented? 
+NSTDFI=@DFI_NSTDFI:-1@
+TAUS=@DFI_TAUS:10800@
+LSPRT=@DFI_LSPRT:.F.@
+
+if [[ $NSTDFI -eq -1 ]] ; then
+  if [[ ${DFI_CPL} == 1  ]] ; then
+    # make sure the DFI window is < 1h
+    NSTDFI=$(( 3600 / TIMESTEP - 1 ))
+  else
+    # "normal" NSTDFI is for a window of about 1.04h
+    NSTDFI=$(( 3750 / TIMESTEP + 1 ))
+  fi
+fi
+
+# NOTE: no longer necessary to set LSPRT=.FALSE. in DFI (???)
+# BUT: it has a *significant* effect on the output!
+# If you want LSPRT=.T. in DFI, just don't use {lsprt} in namelist
+# NOTE: for DFI, we turn off IO server, as there is only 1 output file anyway
+cat ${NAMELIST} |grep -v '^!'|sed -e "s/!.*//"   \
+  -e "s/NPROC=.*/NPROC=$NPROC/" \
+  -e "s/NPROC_IO=.*/NPROC_IO=0/" \
+  -e "s/NSTRIN=.*/NSTRIN=$NPROC/" \
+  -e "s/NSTROUT=.*/NSTROUT=$NPROC/" \
+  -e "s/TSTEP=.*/TSTEP=${TIMESTEP}/g"  \
+  -e "s/CUSTOP=.*/CUSTOP=\'t1\'/"               \
+  -e "s/CSTOP=.*/CSTOP=\'t1\'/"               \
+  -e "s/CNMEXP=.*/CNMEXP=\'${CNMEXP}\'/"   \
+  -e "s/CFPDOM(1)=.*/CFPDOM(1)=\'${DOMAIN}\'/"   \
+  -e "s/NFRHIS=.*/NFRHIS=1/"      \
+  -e "s/NHISTS(0)=.*/NHISTS=-1,-0/"      \
+  -e "s/NFRSFXHIS=.*/NFRSFXHIS=1/"      \
+  -e "s/NSFXHISTS(0)=.*/NSFXHISTS=-1,-0/"      \
+  -e "s/N1POS=.*/N1POS=0/"      \
+  -e "s/N1HIS=.*/N1HIS=1/"      \
+  -e "s/N1SFXHIS=.*/N1SFXHIS=0/"      \
+  -e "s/NFPOS=.*/NFPOS=0/"               \
+  -e "s/CFNHWF=.*/CFNHWF=\'ECHALAD_DFI\'/"     \
+  -e "s/TEFRCL=.*/TEFRCL=$CPLFREQ/"     \
+  -e "s/{nfr_hourly}/$(( 3600 / TIMESTEP ))/"  \
+  -e "s/{nfr_3hourly}/$(( 10800 / TIMESTEP ))/"  \
+  -e "s/LDFI=.*/LDFI=.TRUE./"           \
+  -e "s/LSPRT=.*/LSPRT=${LSPRT}/"   \
+  -e "s/NSTDFI=.*/NSTDFI=${NSTDFI}/"   \
+  -e "s/TAUS=.*/TAUS=${TAUS}/" \
+  -e "s/LSTEPS=.*/LSTEPS=.F./" \
+> fort.4
+
+if [[ $SURFACE == "surfex" ]] ; then
+  ln -sf ${d_CLIM}/${PGD_FILE} Const.Clim.sfx
+  cp ${d_NAMELIST}/${NAMELIST_FC_SFX} EXSEG1.nam
+  # bring runtime files
+  ln -sf ${DATADIR_ECOCLIMAP}/* .
+  ln -sf ${DATADIR_RUNTIME}/* .
+else
+  # ISBA doesn't need a lot. Even this is maybe too much...
+  ln -sf ${DATADIR_RUNTIME}/RADRRTM .
+  ln -sf ${DATADIR_RUNTIME}/RADSRTM .
+  ln -sf ${DATADIR_RUNTIME}/MCICA .
+fi
+
+#  /usr/bin/time mpiexec_mpt omplace 
+$MPIRUN ./MASTERODB > out.log 2>err.log || {
+    echo "An ERROR occured!"
+  }
+
+if [[ ! -f ICMSH${CNMEXP}+0000 ]]; then
+  echo "DFI failed."
+  echo ======================================
+  ls -al
+#  echo NODE.001_01
+#  cat NODE.001_01
+  echo ======================================
+#  echo err.log
+#  cat err.log
+  exit 1
+fi
+
+ls -al
+#  mv -f ICMSH${CNMEXP}+0000 ICMSH${CNMEXP}INIT
+
+@include <@TAIL:tail.h@>
+

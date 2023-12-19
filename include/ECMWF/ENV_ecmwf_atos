@@ -1,0 +1,110 @@
+# make output accessible to others
+set +x
+umask 0022
+# Memory settings
+ulimit -s unlimited
+ulimit -c unlimited
+
+# NOTE: if you "purge", remember to load ecflow again!
+module purge
+module load prgenv/intel
+module load intel/2021.4.0
+module load intel-mkl/19.0.5
+module load hpcx-openmpi/2.9.0
+# CORRUPTED MODULE 20221206?
+#module load gcc/8.4.1
+module load gcc/8.5.0
+module load ecflow/@ECF_VERSION@
+
+# should not be becessary if paths were compiled into the executables
+module load ecmwf-toolbox/2022.03.0.1
+module load hdf5/1.10.6
+module load netcdf4/4.7.4
+#module load fftw/3.3.9
+export LD_LIBRARY_PATH=${ECCODES_DIR}/lib:${NETCDF4_DIR}/lib:${LD_LIBRARY_PATH}
+#
+# not needed here because TMPDIR (as falldown of TMP) is on ssd : export TMP=/tmp
+JOB_INITDIR=$SLURM_SUBMIT_DIR
+JOB_NAME=$SLURM_JOB_NAME
+JOB_ID=$SLURM_JOB_ID
+
+echo JOB_INITDIR=$JOB_INITDIR
+echo JOB_NAME=$JOB_NAME
+echo JOB_ID=$JOB_ID
+
+# Number of nodes/mpi-tasks/omp-threads:
+# -------------------------------------
+
+NNODES=$SLURM_JOB_NUM_NODES
+export NPROC=${SLURM_NPROCS}
+
+# number of MPI tasks:
+export MPI_TASKS=${SLURM_NTASKS}
+MPITASKS_PER_NODE=$((MPI_TASKS/NNODES))
+
+echo MPI_TASKS=$MPI_TASKS
+echo MPITASKS_PER_NODE=$MPITASKS_PER_NODE
+
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
+echo "OMP_NUM_THREADS : $OMP_NUM_THREADS"
+
+export MP_SINGLE_THREAD=yes
+
+# model config (128 cores/node)
+echo "NNODES   : $NNODES"
+echo "NPROC    : $NPROC"
+echo "NTASKS   : $SLURM_NTASKS"
+echo "NPROC_IO : $NPROC_IO"
+
+
+# Specific environment variables :
+# ------------------------------
+# Open-MP business :
+# OMP_PLACES looks important for the binding by srun :
+export OMP_PLACES=threads
+export OMP_STACKSIZE=4G
+export KMP_STACKSIZE=4G
+export KMP_MONITOR_STACKSIZE=4G
+# Bitwise reproductibility with MKL :
+export MKL_CBWR="AUTO,STRICT"
+export MKL_NUM_THREADS=1
+export MKL_DEBUG_CPU_TYPE=5
+# ECMWF prefers "release" than "release_mt" with Intel MPI library :
+export I_MPI_LIBRARY_KIND=release
+
+# Software default environment variables :
+# --------------------------------------
+export DR_HOOK=1
+export DR_HOOK_IGNORE_SIGNALS=-1
+export DR_HOOK_SILENT=1
+export DR_HOOK_SHOW_PROCESS_OPTIONS=0
+export MPL_MBX_SIZE=2048000000
+export EC_PROFILE_HEAP=0
+export EC_PROFILE_MEM=0
+export EC_MPI_ATEXIT=0
+export EC_MEMINFO=0
+
+## Suitable BUFR tables for the "harmonie" version of BATOR:
+#export BUFR_TABLES=/home/cv6/software/auxlibs/3.7_ec/lib/bufrtables/
+
+################################################################
+##
+# we assume MPI libs are already OK (module loaded)
+# we don't use MPIAUTO
+MPIRUN="time srun"
+
+
+# AD: fix UCX...
+###export UCX_LOG_LEVEL=info
+###echo "UCX_TLS = $UCX_TLS"
+# this seems to fix crashes at >4 nodes (don't explicitly set rc_x)
+# (it is a bit slower, though, so only unset if really necessary)
+# it's not necessary if you use OpenMP (e.g. 4 cpus/task)
+# 
+# from an online discussion (about other code) :
+# "It's expected to fail with UCX_TLS=self,sm,rc_x, on large scale."
+# if [[ $SLURM_NNODES -le 5 ]] ; then
+#unset UCX_TLS
+
+
+

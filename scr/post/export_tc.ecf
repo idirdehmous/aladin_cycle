@@ -1,0 +1,74 @@
+@manual
+DESCRIPTION:
+This task exports the model output to RMI.
+
+Note that this routine is for separate HOURLY output files.
+- runs for every lead time
+- packages all hourly postprocessing data into a tar file
+- transfers this tar file to RMI via MSPDS
+
+DEPENDENT ON:
+This task is triggered by completion of the post-processing task of the same lead time.
+Most likely failure is a problem with the ECPDS system.
+
+CONSOLE:
+Failure of this task requires immediate action!
+
+Sometimes a file produced in post-processing is available with a short delay because of file system latency.  In that case, just rerunning this task should be enough.
+
+If failure persists, check whether the input files are available.  These have been created by the other post-proc tasks in the same leadtime family.
+
+1) re-run once
+2) check in output whether failure is due to creation of tar file or ECPDS error
+
+If failure persists, contact RMI and/or ECPDS resposible
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+set -x
+
+#################
+# EXAMPLE of transfer task
+#mspds -force -destination TC2_RMI -source latlon_2023013112+06.grib -target al_oper/latlon_2023013112+06.grib -verbose -echost bodh1ecpmas-03 -metadata 'stream=AROME,date=20230131,time=12,step=06'
+#################
+
+HH=@PPHH:00@
+
+TRANSFER="mspds -force -destination @ECPDS_DESTINATION:TC2_RMI@ -verbose "
+TARGET_PATH="@ECPDS_PATH:al_staging/${CNMEXP,,}@"/$RR
+METADATA="stream=${CNMEXP},date=${YYYY}${MM}${DD},time=${RR},step=${HH}"
+
+tarfile=${RUNDATE}-${CNMEXP}+${HH}.tar
+
+cd ${d_POST}
+tar -cf $tarfile *_${HH}.fa # PF${CNMEXP}*+00$HH
+
+# in case the forecast is finished, add other output files
+if [[ 10#$HH -eq $HOURRANGE ]] ; then
+  cd $d_FC
+  # STEPS
+  stepsfile=steps
+  if [ -e $stepsfile ] ; then
+    steps_rename=steps_${MM}${DD}${RR}.nc
+    cp $stepsfile ${steps_rename}
+    echo "Adding ${steps_rename} to tar file $tarfile."
+    tar -rf ${d_POST}/$tarfile ${steps_rename}
+  fi
+  # ECHKEVO
+  echkfile=ICMSH${CNMEXP}CHKOUT2
+  if [ -e $echkfile ] ; then
+      # rename?
+      echo "Adding ${echkfile} to tar file $tarfile."
+      tar -rf ${d_POST}/$tarfile $echkfile
+  fi
+  cd ${d_POST}
+fi
+
+module load ecaccess
+$TRANSFER -source $tarfile -target ${TARGET_PATH}/$tarfile -metadata $METADATA
+
+@include <@TAIL:tail.h@>
+

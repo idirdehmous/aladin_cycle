@@ -1,0 +1,34 @@
+#! /usr/bin/bash
+@manual
+This script will (re-)establish all data to TCWORK when it is missing from BOTH ws1 and ws2.
+Run this script if (part of) the necessary data is no longer available on TCWORK.
+
+This should never be necessary, as usually the data can be sync'ed between the two STHOST's.
+
+NOTE: usually, all this data is sync\'ed between the two working directories by a lagged task.
+
+@end
+@include<@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+STHOST=@STHOST@
+TCWORK=@TCWORK:/ec/${TCWORK}/tc/${USER}/tcwork@
+MAINDATA=@MAINDATA:ACCORD@
+DPATH=$TCWORK/$MAINDATA
+[ -e $DPATH ] || mkdir -p $DPATH
+
+# try rsync from XXX
+repo1=/perm/cv6/$MAINDATA
+if [ -e $repo1 ] ; then 
+  rsync $repo1/ $DPATH
+elif [ -e $repo2 ] ; then
+  rsync $repo1/ $DPATH
+else
+  # last resort: retrieve multi-gb tar file from ecfs
+  ecp ec:/zbe/NodeRunnerData.tar NRD.tar
+  tar xf NRD.tar
+fi
+
+@include <@TAIL:tail.h@>
+

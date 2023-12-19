@@ -1,0 +1,188 @@
+#!/bin/bash
+@manual
+DESCRIPTION:
+This is the main forecast task. 
+If there is an assimilation cycle (AO13, AR13), it assumes a file "analysis" is available.
+If the model uses Surfex, there must also be a file "analysis_sfx".
+
+DEPENDENT ON:
+- lbc family must have completed correctly
+- if the suite has data assimilation, a correct analysis must be available.
+
+CONSOLE:
+In rare cases, this task may go over walltime because of unexpected latency.
+If this task fails:
+  1. Try to rerun (e.g. if error was due to unexpected file system latency)
+  2. Check the monitor:forecast_counter to see at what lead time the forecast fails.
+  3. If failure is at >0 lead time, most likely cause is corrupted LBC.
+
+ANALYSTS:
+If the error can not be diagnosed from the task output, look at full log files in the working directory.
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+set -x
+
+# after a re-run, the progress counter is not reset (only reset with re-queue)
+# so for safety:
+
+ecflow_client --meter forecast_counter -1
+
+CFNHWF=ECHALAD
+
+# Prepare directory
+WDIR=${d_FC}
+mkdir -p $WDIR
+cd $WDIR
+
+# clean up
+# NOTE: recursive rm is needed for io_server temp directories
+if [[ @ARCHIVE_ERROR:no@ == yes && @ECF_TRYNO@ -gt 1 ]] ; then
+  # this is a re-run (manual or automatic...), so we may want to keep old output
+  ls -R
+  err_path=${BASEDIR}/ERROR/${RUNDATE}/@ECF_TRYNO@
+  mkdir -p $err_path
+  for ff in err.log out.log NODE* *core* ; do
+    if [ -f $ff ] ; then
+      cp $ff $err_path
+    fi
+  done
+fi
+rm -rf * 2>/dev/null
+
+# LBC's
+#
+# NOTE: some of these files may not yet "exist", but creating the link is OK
+#       we know that at least the first few LBC's are already available.
+maxlbc=$(( HOURRANGE / LBC_INC ))
+if (( $HOURRANGE % $LBC_INC != 0 )) ; then
+  maxlbc=$(( maxlbc + 1 ))
+fi
+
+for nnn in $(seq -f%03g 0 $maxlbc ) ; do
+  ln -sf ${d_LBC}/ELSCF${CNMEXP}ALBC$nnn .
+done
+
+# INITIAL CONDITIONS
+# FIXME: should 0h coupling file be ==INIT or ==LBC000 ?
+if [[ $ASSIMILATION == "no" || $COLDSTART = $RUNDATE ]] ; then
+  init_atmo=${d_LBC}/ELSCF${CNMEXP}ALBC000
+  [[ $SURFACE == "surfex" ]] && init_sfx=${d_LBC}/ICMSH${CNMEXP}INIT.sfx
+else
+  # use analysis
+  if [[ -e ${d_GUESS}/analysis ]] ; then
+    init_atmo=${d_GUESS}/analysis
+    [[ $SURFACE == "surfex" ]] && init_sfx=${d_GUESS}/analysis_sfx
+  elif [[ $RUNMODE == oper && $ECF_TRYNO -ge 3 ]] ; then
+    # if we have already tried to re-run in an operational setting
+    # just use the first guess (better than no forecast...)? 
+    init_atmo=${d_GUESS}/first_guess_orig
+    [[ $SURFACE == "surfex" ]] && init_sfx=${d_GUESS}/first_guess_sfx
+  else
+    echo "No analysis found."
+    exit 1
+  fi
+fi
+# in case of a prior DFI step, we change the atmospheric init file:
+if [[ $DFI == "yes" && -e ${d_DFI}/ICMSH${CNMEXP}+0000 ]] ; then
+  init_atmo=${d_DFI}/ICMSH${CNMEXP}+0000
+fi
+
+ln -sf $init_atmo ICMSH${CNMEXP}INIT
+[[ $SURFACE == "surfex" ]] && ln -sf $init_sfx ICMSH${CNMEXP}INIT.sfx
+
+# space-consistent LBC's
+ln -sf ICMSH${CNMEXP}INIT ELSCF${CNMEXP}ALBC000
+
+# Bring executable (see settings_bin.h)
+
+if [[ -e  ${d_BIN}/MASTERODB_FC ]] ; then
+  ln -sf ${d_BIN}/MASTERODB_FC MASTERODB
+else
+  ln -sf ${d_BIN}/MASTERODB MASTERODB
+fi
+
+NAMELIST="$( for nn in $NAMELIST_FC ; do echo ${d_NAMELIST}/$nn ; done )"
+
+CPLFREQ=$(( 10#$LBC_INC * 3600 ))
+
+### FORECAST
+# assume hourly historic files? set NFRHIS=3600/TSTEP ?
+# OR assume tha NFRHIS etc are already correctly set.
+# NFRHIS=1, NHISTS=-N,-0,-1,..,-N is independent of time step...
+# CYCLE_INC==0 signifies you are running separate cases...
+# SURFEX HISTORICAL FILES?
+if [[ $SURFACE == "surfex" && $ASSIMILATION = yes && $CYCLE_INC -gt 0 ]] ; then
+  nsfx=$(( @FG_MAX:$CYCLE_INC@ / $CYCLE_INC ))
+  nsfxhists=-${nsfx},-$(seq -s",-" $CYCLE_INC $CYCLE_INC @FG_MAX:$CYCLE_INC@)
+else
+  nsfxhists=-1,-0
+fi
+
+if [[ $NPROC_IO -gt 0 ]] ; then
+  NPROC=$(( $NPROC - $NPROC_IO ))
+fi
+
+cat ${NAMELIST} | grep -v '^!' | sed -e "s/!.*//" \
+  -e "s/NPROC=.*/NPROC=$NPROC/" \
+  -e "s/NPROC_IO=.*/NPROC_IO=$NPROC_IO/" \
+  -e "s/NSTRIN=.*/NSTRIN=$NPROC/" \
+  -e "s/NSTROUT=.*/NSTROUT=$NPROC/" \
+  -e "s/TSTEP=.*/TSTEP=${TIMESTEP}/"  \
+  -e "s/CUSTOP=.*/CUSTOP=\'${HOURRANGE}h\'/"  \
+  -e "s/CNMEXP=.*/CNMEXP=\'${CNMEXP}\'/"   \
+  -e "s/CFPDOM(1)=.*/CFPDOM(1)=\'${DOMAIN}\'/"   \
+  -e "s/CUSTOP=.*/CUSTOP=\'h${HOURRANGE}\'/"  \
+  -e "s/CSTOP=.*/CSTOP=\'h${HOURRANGE}\'/"  \
+  -e "s/{nfr_hourly}/$(( 3600 / TIMESTEP ))/"  \
+  -e "s/{nfr_3hourly}/$(( 10800 / TIMESTEP ))/"  \
+  -e "s/NSFXHISTS(0)=.*/NSFXHISTS(0)=$nsfxhists/"  \
+  -e "s/CFNHWF=.*/CFNHWF=\'${CFNHWF}\'/"     \
+  -e "s/TEFRCL=.*/TEFRCL=$CPLFREQ/"      \
+> fort.4
+
+if [[ $SURFACE == "surfex" ]] ; then
+  ln -sf ${d_CLIM}/${PGD_FILE} Const.Clim.sfx
+  cp ${d_NAMELIST}/${NAMELIST_FC_SFX} EXSEG1.nam
+  # bring runtime files
+  ln -sf ${DATADIR_ECOCLIMAP}/* .
+  ln -sf ${DATADIR_RUNTIME}/* .
+else
+  # ISBA doesn't need a lot. Even this is maybe too much...
+  ln -sf ${DATADIR_RUNTIME}/RADRRTM .
+  ln -sf ${DATADIR_RUNTIME}/RADSRTM .
+  ln -sf ${DATADIR_RUNTIME}/MCICA .
+fi
+
+$MPIRUN ./MASTERODB > out.log 2>err.log || {
+  echo "ERROR"
+}
+
+# to make debugging easier via ecflow (&logserver)
+# we copy the error messages into the output
+
+if (( $NPROC_IO > 0 )) ; then
+  LDT_FILE="io_serv.000001.d/ECHIS"
+else
+  LDT_FILE="ECHALAD"
+fi
+
+if [[ ! -e $LDT_FILE || 10#`cat $LDT_FILE` -lt 10#$HOURRANGE ]] ; then
+  echo ======================================
+  ls -al
+  echo ======================================
+#  echo err.log
+#  cat err.log
+#  echo ======================================
+#  echo NODE.001_01
+#  cat NODE.001_01
+  exit 1
+fi
+sync .
+echo === FINISHED ===
+@include <@TAIL:tail.h@>

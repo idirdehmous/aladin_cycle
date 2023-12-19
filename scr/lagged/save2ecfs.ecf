@@ -1,0 +1,95 @@
+#! /usr/bin/bash
+@manual
+This (lagged) task writes the analysis and first_guess to ECFS.
+If this task fails: try to re-run.
+
+Failure probably could mean:
+ - a connection problem
+ - lack of archiving space
+ - missing input data
+
+If failure persists and no solution is available, set to complete and warn .
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+set -x
+# save first guess and analysis to permanent storage
+# normally, the first_guess should have been archived in previous cycle
+
+#ARCH_CYCLE=@ARCH_CYCLE:"ec:ARCHIVE/${CNMEXP}/CYCLE"@
+ARCH_PATH=@ARCH_PATH:"ectmp:ARCHIVE/$CNMEXP"@
+
+cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+cd $cyclepath
+
+# assimilation data
+if [[ $ASSIMILATION == "yes" ]] ; then
+  archpath=${ARCH_PATH}/ASSIM/$YYYY/$MM/$DD
+  emkdir -p $archpath
+  tarfile=ASSIM_${CNMEXP}_${RUNDATE}.tar
+  # In case of a coldstart or skipped assimilation, they don't exist!
+  if [ -e first_guess ] ; then
+    tar -cf $tarfile first*
+  fi
+  if [ -e analysis ] ; then
+    tar -rf $tarfile ana*
+  fi
+  [ -e $tarfile ] && {
+    ecp $tarfile $archpath
+    rm -f $tarfile
+  }
+
+  # ODB data
+  tarfile=ODB_${CNMEXP}_${RUNDATE}.tar
+  if [ -e ECMA.tar ] ; then
+    tar -cf $tarfile  ECMA*
+    # rm -rf ECMA*
+  fi
+  if [ -e CCMA_screen.tar ] ; then
+    tar -rf $tarfile CCMA*
+    # rm -rf CCMA*
+  fi
+  [ -e $tarfile ] && {
+    ecp $tarfile $archpath
+    rm -f $tarfile
+  }
+fi
+
+# historical files
+tarfile=HIST_${CNMEXP}_${RUNDATE}.tar
+[ -e $tarfile ] && {
+  # full historical files are only saved to ectmp (90 days)
+  archpath=${ARCH_PATH}/HIST/$YYYY/$MM/$DD
+  emkdir -p $archpath
+  arch_tmp=${archpath/ec:/ectmp:}
+  echo "Archiving historical files at `date -u`"
+  ecp $tarfile $arch_tmp
+#  rm -f $tarfile
+}
+
+# LBC's
+tarfile=LBC_${CNMEXP}_${RUNDATE}.tar
+[ -e $tarfile ] && {
+  archpath=${ARCH_PATH}/LBC/$YYYY/$MM/$DD
+  emkdir -p $archpath
+  echo "Archiving LBC's at `date -u`"
+  ecp $tarfile $archpath
+#  rm -f $tarfile
+}
+
+# reduced forecast files
+tarfile=FC_${CNMEXP}_${RUNDATE}.tar
+[ -e $tarfile ] && {
+  archpath=${ARCH_PATH}/FC/$YYYY/$MM/$DD
+  emkdir -p $archpath
+  echo "Archiving LBC's at `date -u`"
+  ecp $tarfile $archpath
+#  rm -f $tarfile
+}
+
+
+@include <@TAIL:tail.h@>
+

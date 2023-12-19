@@ -1,0 +1,46 @@
+#! /usr/bin/bash
+@manual
+This script switches the STHOST for TC2 tasks.
+It should only be used in case there is a problem with the
+current STHOST directory (unavailable, full, damaged...)
+
+NEVER run this script while there are still jobs running or queued in the suite!
+
+After the switch, all jobs will use the other STHOST.
+
+NOTE: this task only moves the current suite, not any other suite running on the same ecflow server!
+
+@end
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+# WARNING: running this script while a cycle is running
+#   will almost certainly cause serious problems !
+STHOST=@STHOST@
+case $STHOST in 
+  ws1) STHOST2=ws2 ;;
+  ws2) STHOST2=ws1 ;;
+esac
+
+BASEDIR2=${BASEDIR/$STHOST/$STHOST2}
+#if [ ! -e $BASEDIR2 ] ; then
+#  mkdir -p $BASEDIR2
+#fi
+
+
+#DATA_PATH2=${DATA_PATH/$STHOST/$STHOST2}
+#if [ ! -e $DATA_PATH2 ] ; then
+#  mkdir -p $DATA_PATH2
+#fi
+
+# TODO: check data paths?
+# rsync -a ${RUNTIME_DATA} $DATA_PATH2
+
+# BASEDIR should be expressed with STHOST macro
+ecflow_client --alter=change label STHOST $STHOST2 /@SUITE@
+ecflow_client --alter=change variable STHOST $STHOST2 /@SUITE@
+#ecflow_client --alter=change variable BASEDIR $BASEDIR2 /@SUITE@
+
+
+@include <@TAIL:tail.h@>
+

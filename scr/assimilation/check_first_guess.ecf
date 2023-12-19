@@ -1,0 +1,59 @@
+#! /bin/bash
+@manual
+This task checks for the availability of the first guess for the assimilation cycle.
+
+If this job fails:
+- Did the previous cycle finish correctly? Or at least progress as far as producing a first guess (+3h)?
+If not, the error is in the previous cycle and this task can only be restarted if the previous cycle has produced a first guess (task next_cycle/save_first_guess).
+- If the working directory (STHOST) was changed before the CYCLE directory first guess was sync\'ed (a lagged task), it may be missing from the current working directory but present in the other TCWORK path (if available). Alternatively, the first guess file may also have been archived to ECFS, so as a last resort this can be checked.
+- In the (rare) event of an actual cold start of the suite, the whole assimilation faily should be set to complete. Normally, this happens automatically. It should NEVER be set complete in other cases.
+
+If re-running this task fails, contact
+rmi_belgium_timecrit_mgmt@@lists.ecmwf.int
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+set -x
+umask 0022
+
+WDIR=${d_GUESS}
+[ -e $WDIR ] || mkdir -p $WDIR
+rm -f $WDIR/*
+
+d_FG=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+if [ ! -e ${d_FG}/first_guess ] ; then
+  echo ERROR: ${d_FG}/first_guess not found.
+  exit 1
+fi
+
+# create a "temporary" analysis_canari file?
+# that way, you can skip CANARI without further manual changes
+# NO: in fact, this should be done in the skip_canari task
+# otherwise "cp analysis ..." to an existing link would overwrite fg
+echo ${d_FG}/first_guess found.
+cp ${d_FG}/first_guess $WDIR/first_guess_orig
+ln -sf $WDIR/first_guess_orig $WDIR/first_guess
+if [[ $SURFACE = "surfex" ]] ; then
+  if [ -e ${d_FG}/first_guess_sfx ] ; then
+    # that way, you can skip CANARI without further manual changes
+    echo ${d_FG}/first_guess_sfx found.
+    cp ${d_FG}/first_guess_sfx $WDIR
+  else
+    echo ERROR: $WDIR/first_guess_sfx not found.
+    exit 1
+  fi
+fi
+
+# as a quick fix for serious assimilation problems:
+# this way, you can set the whole assimilation family to complete
+# and the forecast would still run...
+# NOT very nice, I know.
+# FIXME: this is too destructive: if you later copy an anaylysis, this link
+#        could cause the FG to be overwritten...
+#ln -sf $WDIR/first_guess_orig $WDIR/analysis
+#[[ $SURFACE = "surfex" ]] && ln -sf $WDIR/first_guess_sfx $WDIR/analysis_sfx
+
+@include <@TAIL:tail.h@>

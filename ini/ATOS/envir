@@ -1,0 +1,3 @@
+export ECF_HOST=ecflow-tc2-${USER}-001
+export NR_SUITE_PATH=/home/${USER}/ECF
+module load python3 ecflow

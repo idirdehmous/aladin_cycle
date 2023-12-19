@@ -1,0 +1,25 @@
+#! /usr/bin/bash
+@manual
+Sync the constant data (clim files , executables, ...) to the other STHOST.
+Normally this should be very fast, as these directories don't change
+
+IBut it's not a bad idea to ckech this once in a while.
+NOTE however, that we should probably avoid running this task inside multiple suites.
+@end
+@include<@HPC_HEADER@
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+STHOST=@STHOST@
+case $STHOST in
+  ws1) STHOST2=ws2 ;; 
+  ws2) STHOST2=ws1 ;; 
+esac
+
+# sunc the "cycle" date
+TCWORK2=${TCWORK/$STHOST/$STHOST2}
+sync -a --delete $TCWORK/NodeRunnerData/ $TCWORK2/NodeRunnerData
+
+
+@include <@TAIL:tail.h@>
+

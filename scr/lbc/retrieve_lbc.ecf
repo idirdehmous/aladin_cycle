@@ -1,0 +1,113 @@
+@manual
+DESCRIPTION:
+This task retrieves the LBCs (boundary conditions) for the forecast.
+
+The source data may be in different forms.
+CPL_TEMPLATE (if defined) is a template with full path where the input files can be retrieved locally.
+Otherwise, "retrieve_lbc" is a function defined in the local settings (/include/settings_local_<platform>.h).
+
+At the end of the task, LBC_<hh> files should be ready, with the (possible) lag taken into account.
+
+DEPENDENT ON:
+AO40: coupled to Arpege data in $TCWORK/acquisition . This data is sent by RMI using ecpds.
+AO13 and AR13 : coupled to e903 data provided by ECMWF TC3.
+All these files should be in the $TCWORK/acquisition directory.
+
+CONSOLE:
+If this task fails, first check whether it is due to missing LBC files.
+That would result in the task issuing a warning and waiting until wall time is reached.
+
+If the output shows another error, it probably indicates a corrupted LBC file.
+
+For missing or corrupted LBC's, contact asap:
+- AO40: contact RMI for missing Arpege coupling data
+- AO13 & AR13: check with TC3 task for LBC generation
+
+ANALYSTS:
+Check the task output to identify the cause of the error. Missing or corrupted LBC files must be re-sent.
+
+@include <manual_common.h>
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+# prepare location
+
+[ -e $d_LBC/input ] || mkdir -p $d_LBC/input
+cd $d_LBC/input
+rm -f LBC_*
+
+# at intermediate cycles, we may be using lagged LBC's !!!
+LBC_LAG=$(( 10#$RR % 6 ))
+LBCDATE=`date -u -d "$YYYY$MM$DD $RR -$LBC_LAG hours" +%Y%m%d%H`
+LYMD=`echo $LBCDATE | cut -c 1-8`
+LRR=`echo $LBCDATE | cut -c 9-10`
+LDD=`echo $LBCDATE | cut -c 7-8`
+LMM=`echo $LBCDATE | cut -c 5-6`
+LYYYY=`echo $LBCDATE | cut -c 1-4`
+# NOTE: file system (NFS) can lag: another process may not yet see the file
+#       so if you use a meter to trigger the LBC's e927
+#       it may be safer to add a little "sleep"
+
+# This script can run for all LBC's (serial) or for a single LBC (parallel)
+if [[ @FAMILY1@ = lbc ]] ; then
+  lbc_parallel=no
+  hhlist=$(seq -f%02g 0 ${LBC_INC} $HOURRANGE)
+else
+  lbc_parallel=yes
+  hhlist=@FAMILY1@
+fi
+
+# The actual retrieval is a local function (settings_local_${PLATFORM}.h) or uses a simple template
+CPL_TEMPLATE=@CPL_TEMPLATE:@
+if [[ ${CPL_TEMPLATE} != "" ]] ; then
+  for hh in $hhlist ; do
+    # use a simple LBC template
+    LHH=$(printf "%02g" $(( 10#$hh + 10#$LBC_LAG )) )
+    fname=$(echo $CPL_TEMPLATE | sed \
+            -e "s/YYYY/$LYYYY/g"  \
+            -e "s/MM/$LMM/g"  \
+            -e "s/DD/$LDD/g"  \
+            -e "s/RR/$LRR/g"  \
+            -e "s/HH/$LHH/g" )
+    echo "Checking for file $fname"
+    while [ ! -e $fname ] ; do
+      echo "### file $fname is not (yet) avaliable"
+      echo "###   --> waiting 1' "
+      show_warning "Coupling file +$LHH delayed! (date : ${LYYYY}-${LMM}-${LDD}:${LRR})"
+      sleep 60
+    done
+
+    ln -sf ${fname} LBC_$hh
+    # NOTE: copy or link ?
+#    cp ${fname} LBC_$hh
+    file_date=$(date -u -d "`fa_checkdate LBC_$hh`" +%Y%m%d%H)
+    valdate=$(date -u -d "$YYYY$MM$DD $RR +$hh hours" +%Y%m%d%H)
+    if [[ $file_date != $valdate ]] ; then
+      echo "ERROR: Wrong file date!"
+      echo "Expecting $RUNDATE + $hh = $valdate"
+      echo "File LBC_$hh has $(fa_checkdate LBC_$hh)= $file_date" 
+      exit 1
+    fi
+    ecflow_client --meter lbc_counter $hh
+  done
+else # use a dedicated function defined in settings_local_... 
+  retrieve_lbc
+fi
+
+# if there is no E927 step (data already on model grid)
+# make sure we have the correct file names available
+if [[ $COUPLING_DOMAIN  ==  $DOMAIN ]] ; then
+  for hh in $hhlist ; do
+    NLBC=$(printf %03g $(( 10#$hh / LBC_INC )))
+    ln -sf ${d_LBC}/input/LBC_$hh ${d_LBC}/ELSCF${CNMEXP}ALBC$NLBC
+  done
+  event_path=/@SUITE@/@FAMILY@
+  ecflow_client --force=set ${event_path}:LAUNCH_FC
+fi
+
+@include <@TAIL:tail.h@>
+

@@ -1,0 +1,148 @@
+@manual
+DESCRIPTION:
+A generic post-processing task (FulPos).
+
+DEPENDENT ON:
+The task is triggered if a certain lead time has been reached.
+The historical file (ICMSH...) produced by the model run (forecast/integration) serves as input.
+AO13 & AR13: depend on "gather_io" task that combines all fractional output files.
+
+CONSOLE:
+If this task fails, first check whether the input file is available.
+AO13 & AR13: check that "gather_io" has finished correctly.
+Sometimes the file is available with a few seconds delay because of file system latency. In that case, just rerun this task.
+If failure persists, contact RMI.
+
+ANALYSTS:
+If the task fails in the 927 step itself, check the log files in the working directory.
+
+@include <manual_common.h>
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+set -x
+
+# loop over hours OR call the script for only 1 hour?
+hh=@PPHH:00@
+pp_name=@pp_name:""@
+if [[ $pp_name == "" ]] ; then
+  pp_name=@FAMILY1@
+fi
+
+# convert "d1;d2;d3" to a list
+domain_list=( $(echo @pp_domain@) )
+n_domains=${#domain_list[@@]}
+
+
+# prepare directory
+WDIR=${d_POST}/${pp_name}/${hh}
+mkdir -p ${WDIR}
+rm -f $WDIR/* 2>/dev/null
+cd ${WDIR}
+
+# we use the clim file valid at the lead time (LFPMOIS=.F.)
+# not necessarily at the start of the run
+VDATE=`dateincr -h $RUNDATE +$hh`
+MM2=`echo $VDATE | cut -c 5-6`
+#if (( $NPROC_IO > 0 )) ; then
+#  inpath=${d_POST}/gather_io
+#else
+  inpath=${d_FC}
+#fi
+
+ln -sf ${inpath}/ICMSH${CNMEXP}+00$hh ICMSH${CNMEXP}INIT
+ln -sf ${d_CLIM}/${DOMAIN}_$MM2 Const.Clim
+for pp_domain in ${domain_list[@@]} ; do
+  dom=`echo $pp_domain | cut -d ":" -f1`
+  ln -sf ${d_CLIM}/${dom}_$MM2 const.clim.${dom}
+done
+
+# surfex output?
+#ln -sf ${d_FC}/ICMSH${CNMEXP}+00$hh.sfx ICMSH${CNMEXP}INIT.sfx
+
+
+# Bring rrtm data (mcica, srtm:  not used?)
+#ln -sf ${DATADIR_RUNTIME}/RADRRTM .
+
+# Create namelist file
+# at leadtime +00: avoid cumulated fluxes! ("!00" lines)
+## use (( )) to be sure that 00 == 0
+# CF="^!00"
+if (( 10#$hh == 0 )) ; then
+  cfx='!'
+else
+  cfx=''
+fi
+
+# NAMELISTS
+cnmexp=`echo $CNMEXP | tr '[:upper:]' '[:lower:]'`
+NAMELIST_POS="${NAMELIST_POS} ${cnmexp}_post_base_${pp_name}.nam"
+NAMELIST="$( for nn in $NAMELIST_POS ; do echo ${d_NAMELIST}/$nn ; done )"
+
+selection_file=${d_NAMELIST}/${cnmexp}_post_sel_${pp_name}.nam
+if [[ -e $selection_file ]] ; then
+  CNPPATH="."
+  cat ${d_NAMELIST}/${cnmexp}_post_sel_${pp_name}.nam | sed \
+  -e "s/^!00/$cfx/" \
+  -e "s/!.*//" \
+  > xxt00000000
+else
+  # there is no xxt0000000 file for fine-tuning the fields/levels
+  CNPPATH=" "
+fi
+
+# with the new FP namelist xxtGenerator, there shouldn't be as many replacements 
+# TODO: some of these substitutions may be removed
+# e.g. domain_list will now be pre-filled
+cat ${NAMELIST} | sed \
+  -e "s/^!00/$cfx/" \
+  -e "s/!.*//"  \
+  -e "s/{nproc}/$NPROC/" \
+  -e "s/NSTRIN=.*/NSTRIN=$NPROC/" \
+  -e "s/NSTROUT=.*/NSTROUT=$NPROC/" \
+  -e "s/CNMEXP=.*/CNMEXP=\'$CNMEXP\'/"   \
+  -e "s/CNPPATH=.*/CNPPATH=\'$CNPPATH\'/"     \
+> fort.4
+#  -e "s/{cfpdom}/${domain_list}/" \
+#  -e "s/NPRGPNS=.*/NPRGPNS=$NPRGPNS/" \
+#  -e "s/NPRGPEW=.*/NPRGPEW=$NPRGPEW/" \
+#  -e "s/NPRTRV=.*/NPRTRV=$NPRTRV/" \
+#  -e "s/NPRTRW=.*/NPRTRW=$NPRTRW/" \
+
+if [ -e ${d_BIN}/MASTERODB_POS ] ; then
+  ln -sf ${d_BIN}/MASTERODB_POS MASTERODB
+else
+  ln -sf ${d_BIN}/MASTERODB MASTERODB
+fi
+$MPIRUN ./MASTERODB >out.log 2>err.log || {
+    echo "### ERROR in post processing ###"
+    ls -al
+    mkdir -p ${d_ERROR}
+    echo "cp err.log ${d_ERROR}/err.log_${RUNDATE}_${CNMEXP}_${pp_name}_$hh"
+    cp err.log ${d_ERROR}/err.log_${RUNDATE}_${CNMEXP}_${pp_name}_$hh
+  }
+
+# Now we may have to loop over the output domains
+#   rename and move the files
+
+for pp_domain in ${domain_list[@@]} ; do
+  dom=`echo $pp_domain | cut -d ":" -f1`
+  lab=`echo $pp_domain | cut -d ":" -f2`
+  
+  outfile=PF${CNMEXP}${dom}+0000
+  # [ -e $outfile ] || ???
+  if [ $lab ] ; then 
+    fafile=${lab}${MM}${DD}${RR}_${hh}.fa
+  else
+    fafile=PF${CNMEXP}${dom}+00$hh
+  fi
+  mv $outfile ${d_POST}/$fafile
+done
+sync ${d_POST}
+echo === FINISHED ===
+
+@include <@TAIL:tail.h@>
+

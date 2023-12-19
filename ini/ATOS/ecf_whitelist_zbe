@@ -1,0 +1,52 @@
+5.0.0
+# format: 1 line per user name. adding "-" gives read-only access.
+# NOTE: after updateing this file, remember to run
+# ecflow_client --reloadwsfile
+
+# TC-2 User
+z??
+
+# NMS staff needing access
+
+# ECMWF Shift Staff
+adkm
+cdcp
+cdfv
+cdj
+cdxr
+cif
+coam
+coi
+colm
+comp
+cox
+maml
+newops
+ops
+
+# ECMWF User Support
+usbk
+usd
+usl
+ussg
+usrc
+usv
+usxa
+
+# ECMWF HPC Team (read-only)
+-syg
+-sycw
+-sycs
+-syjt
+
+# RMI staff (read-only)
+-cv6 # Alex
+-cur # oper
+-cvz # Dimitra
+-cvq # Stephane
+-cvah # Idir
+-cvj # Alain
+-cv9 # Daan
+-cu0k # Michiel
+-cvs # Joffrey
+

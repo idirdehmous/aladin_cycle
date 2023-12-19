@@ -1,0 +1,70 @@
+@manual
+This task saves the full model output ("historical files") to the cycle directory.
+full model output for validation.
+
+In case of failure:
+  - try to re-run
+  - 
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+
+# make a tar file of model output files (ICMSH****)
+# and save to d_CYCLE directory
+
+cycledir=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+mkdir -p $cycledir
+
+# save full historical files
+tarfile=${cycledir}/HIST_${CNMEXP}_${RUNDATE}.tar
+
+# save forecast output
+#if (( $NPROC_IO > 0 )) ; then
+#  cd ${d_POST}/gather_io
+#else
+  cd ${d_FC}
+#fi
+tar -cf $tarfile ICMSH${CNMEXP}+*
+
+#cd $d_FC
+EXTRA_FILES="@EXTRA_FILES:@"
+for ff in $EXTRA_FILES ; do
+  [ -e $ff ] && tar -rf $tarfile $ff
+done
+
+#mv $tarfile $cycledir
+
+# save LBC's
+# Use -h to follow the symlinks and archive the actual file!
+tarfile=${cycledir}/LBC_${CNMEXP}_${RUNDATE}.tar
+tar -chf $tarfile ELSCF${CNMEXP}ALBC*
+#mv $tarfile $cycledir
+
+# save reduced FC data
+case $CNMEXP in 
+  AR13 ) inf=AR13l ;;
+  AO13 ) inf=BS13l ;;
+  AO40 ) inf=BL40l ;;
+esac
+
+tarfile=${cycledir}/FC_${CNMEXP}_${RUNDATE}.tar
+cd ${d_POST}
+if [[ $CNMEXP == "AO40" ]] ; then
+  FAUCON=${DPATH}/rmi-tools/faucon
+  namelist=${d_NAMELIST}/nam_faucon
+  for hh in $(seq -f%02g 0 1 $HOURRANGE ) ; do
+#    echo "$FAUCON -f${infile} -o${outfile} -n${namelist}"
+    # in case of re-run: will fail if output file already exists!
+    infile=${inf}${MM}${DD}${RR}_${hh}.fa
+    outfile=${CNMEXP}l${MM}${DD}${RR}_${hh}.fa
+    [ -e $outfile ] && rm $outfile
+    $FAUCON -f${infile} -o${outfile} -n${namelist}
+  done
+  inf=${CNMEXP}l
+fi
+tar -chf $tarfile ${inf}${MM}${DD}${RR}_??.fa
+
+@include <@TAIL:tail.h@>

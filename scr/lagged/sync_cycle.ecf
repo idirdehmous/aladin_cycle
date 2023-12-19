@@ -1,0 +1,26 @@
+#! /usr/bin/bash
+@manual
+Sync the cycle data to the other STHOST.
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+STHOST=@STHOST@
+case $STHOST in
+  ws1) STHOST2=ws2 ;; 
+  ws2) STHOST2=ws1 ;; 
+esac
+
+TCWORK2=${TCWORK/$STHOST/$STHOST2}
+if [ -e $TCWORK2 ] ; then
+  d_CYCLE2=${d_CYCLE/$STHOST/$STHOST2}
+  mkdir -p $d_CYCLE2
+  rsync -a --delete $d_CYCLE/ $d_CYCLE2 
+else
+  show_warning "$RUNDATE : $STHOST2 not available for sync_cycle!"
+fi
+
+
+@include <@TAIL:tail.h@>
+

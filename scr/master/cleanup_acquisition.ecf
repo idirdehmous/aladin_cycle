@@ -1,0 +1,34 @@
+@manual
+DESCRIPTION
+
+This is a regular task to clean up the acquisition data (mainly LBC data) in TCWORK. By default, such data is retained for 2 days (48h).
+
+
+@end
+
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+
+# how long can data stay on TCWORK?
+# "find" works in days
+# NOTE : "-mtime +2" will select files at least 3 day old (2.9 -> 2 <= 2 so not deleted)
+GRACE=@GRACE:1@
+
+PATH_LIST="@PATH_LIST@"
+
+for path in $PATH_LIST ; do
+  if [[ @USER@ == zbe2 ]] ; then
+    path=${path/acquisition/acquisition_test}
+  fi
+  echo "Cleaning $path"
+  if [ -e $path ] ; then
+    echo "REMOVING:"
+    find $path -type f -mtime +$GRACE -print
+    find $path -type f -mtime +$GRACE -exec rm  {} \;
+  else
+    echo "WARNING: $path not available."
+  fi
+done
+
+@include <@TAIL:tail.h@>
+

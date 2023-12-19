@@ -1,0 +1,53 @@
+@manual
+This is a lagged task to clean up the cycle data (first guess, analysis of previous runs) in TCWORK. By default, such data is retained for 48h.
+
+@end
+
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+# how long can cycle day stay on TCWORK?
+GRACE=@GRACE:48@
+
+mindate=`date -u -d "$YYYY$MM$DD $RR -$GRACE hours" +%Y%m%d%H`
+myyyy=`echo $mindate | cut -c 1-4`
+mmm=`echo $mindate | cut -c 5-6`
+mdd=`echo $mindate | cut -c 7-8`
+mrr=`echo $mindate | cut -c 9-10`
+
+# pretty sure there must be a more elegant way to do this...
+if [ -e ${d_CYCLE} ] ; then
+  for yy in ${d_CYCLE}/* ; do
+    if [ $(basename $yy) -lt $myyyy ] ; then
+      rm -rf $yy
+    fi
+  done
+fi
+
+if [ -e ${d_CYCLE}/$myyyy ] ; then
+  for mm in ${d_CYCLE}/$myyyy/* ; do
+    if [ $(basename $mm) -lt $mmm ] ; then
+      rm -rf $mm
+    fi
+  done
+fi
+
+if [ -e ${d_CYCLE}/$myyyy/$mmm ] ; then
+  for dd in ${d_CYCLE}/$myyyy/$mmm/* ; do
+    if [ $(basename $dd) -lt $mdd ] ; then
+      rm -rf $dd
+    fi
+  done
+fi
+
+if [ -e ${d_CYCLE}/$myyyy/$mmm/$mdd ] ; then
+  for rr in ${d_CYCLE}/$myyyy/$mmm/$mdd/* ; do
+    if [ $(basename $rr) -lt $mrr ] ; then
+      rm -rf $rr
+    fi
+  done
+fi
+
+@include <@TAIL:tail.h@>
+

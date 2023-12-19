@@ -1,0 +1,56 @@
+@manual
+This tasks prepares the labels and date variables for the forecast.
+It also checks whether we are still running in time.
+
+Not sure how this task could fail (only ecflow_client commands). Check if the suite was restarted manually with a bad date string.
+
+@end
+@include <@HPC_HEADER@>
+@include <@HEAD:head.h@>
+@include <settings.h>
+
+set -x
+
+# (re-)set the cycle date label
+ecflow_client --alter=change label LAST_RUNNING "$RUNDATE" /@SUITE@
+ecflow_client --alter=change label RUNDATE "$RUNDATE" /@SUITE@/cycle/@THIS_RUN@/
+
+# SCHOST (and STHOST) labels
+ecflow_client --alter=change label SCHOST "@SCHOST@" /@SUITE@
+if [ @STHOST:@ ] ; then
+  ecflow_client --alter=change label STHOST "@STHOST:@" /@SUITE@
+fi
+
+# clear warnings
+clear_warning /@SUITE@
+clear_warning /@SUITE@/cycle/@THIS_RUN@
+
+# for realtime suite:
+#   check date & time
+# Basically, when this task is running, any time trigger has been either fulfilled or skipped
+
+# FIXME: this should depend on TRIGGER time
+#DELAY_THRESHOLD=8
+#if [[ @REALTIME@ == yes ]] ; then
+#    if [[ $(date -u -d "now -10 hours" +%Y%m%d%H) -ge $RUNDATE ]] ; then
+#      echo RUNDATE out of sync: running $RUNDATE on $(date -u +%Y%m%d%H)
+#      show_warning("DELAY: Forecast was  started AFTER trigger time.", @SUITE@)
+#    elif XXX
+#      show_warning("Forecast was started BEFORE trigger time.", @SUITE@)
+#    fi
+#fi
+
+if [[ $ASSIMILATION == yes ]] ; then
+  CYCLEPATH=$(dirname /@SUITE@/@FAMILY@)
+  if [[ $RUNDATE == $COLDSTART ]] ; then
+    # we don't run assimilation on the cold start data (it may fail)
+    ecflow_client --force=complete recursive ${CYCLEPATH}/assimilation
+    # 
+  elif [[ $SURFACE == surfex ]] ; then
+    # if it isn't a cold start, no need to run prep_sfx
+    ecflow_client --force=complete recursive ${CYCLEPATH}/lbc/prep_sfx
+  fi
+fi
+
+@include <@TAIL:tail.h@>
+
