@@ -7,9 +7,15 @@ class nr_node :
   def add_trigger(self, depend) :
     self.add_trigger(depend + " == complete")
 
+<<<<<<< HEAD
 #  def add_node_structure(self, ncores) :
 #    self.add_variable("NODE_SELECT", self.nr_config.platform.define_topology(ncores))
 #    self.add_variable("QUEUE", self.nr_config.platform.define_queue(ncores))
+=======
+  def add_node_structure(self, ncores) :
+    self.add_variable("NODE_SELECT", self.nr_config.platform.define_topology(ncores))
+    self.add_variable("QUEUE", self.nr_config.platform.define_queue(ncores))
+>>>>>>> 7b69f59... update ATOS ini files
 
 
 # NOTE: we want to have the job output in scratch
@@ -45,6 +51,14 @@ class nr_maintenance(Family, nr_node):
              Edit(suite_config.jobs["localjob"]),
              Label("SCRATCH", "@SCRATCH@")))
 
+<<<<<<< HEAD
+=======
+    if suite_config.delay_mode :
+      self += Family("delay", Edit(suite_config.jobs["localjob"])).add(
+        Task("detect_delay", Trigger("/{0}:DELAY == set".format(suite_config.suite_name))),
+        Task("reset_delay", Trigger("/{0}:DELAY == clear".format(suite_config.suite_name))))
+
+>>>>>>> 7b69f59... update ATOS ini files
 ####################################
 
 # a "realtime" suite may have to wait for a certain time or for a trigger
@@ -66,6 +80,15 @@ class nr_wait(Family, nr_node):
   def __init__(self, suite_config, i):
     Family.__init__(self, "wait")
     self.nr_config = suite_config
+<<<<<<< HEAD
+=======
+    if suite_config.delay_mode :
+      compl = " /{0}:DELAY == set".format(suite_config.suite_name)
+      if suite_config.has_assimilation :
+        compl = compl + " && ../{0}/forecast/save_first_guess/{1} == complete".format(suite_config.prev_run(i),
+          "%02d"%suite_config.cycle_inc)
+      self.add(Complete(compl))
+>>>>>>> 7b69f59... update ATOS ini files
 
     if ( suite_config.realtime and suite_config.cycle_times[i] != "" ) :
       self += Task("wait_time",
@@ -125,6 +148,11 @@ class nr_initialisation(Family, nr_node):
     else :
       if suite_config.has_trigger and suite_config.trigger_labels[i] != "" :
         trigger = suite_config.trigger.replace("{cycle}", suite_config.trigger_labels[i])
+<<<<<<< HEAD
+=======
+        if suite_config.delay_mode :
+          trigger = "( " + trigger + " ) or /{0}:DELAY == set".format(suite_config.suite_name)
+>>>>>>> 7b69f59... update ATOS ini files
         self += Trigger(trigger)
       if suite_config.has_assimilation and ( (not suite_config.has_loop) or i > 0 ) :
         trigger = "../{0}/next_cycle/save_first_guess/{1} == complete OR :RUNDATE == :COLDSTART ".format(
@@ -161,7 +189,10 @@ class nr_initialisation(Family, nr_node):
 
 ####################################
 # TODO:
+<<<<<<< HEAD
 #       - make this a set of single-lbc tasks (triggered how? by retrieval?)
+=======
+>>>>>>> 7b69f59... update ATOS ini files
 #       - don't hard-code WALLTIME ?
 #       - For a suite that is WAITING for incoming lbc's, you should have:
 #             1 retrieve task with a meter OR multiple retrieve task with external trigger
@@ -195,11 +226,29 @@ class nr_lbc(Family):
     #       BUT: make sure there are no invalid references to it
     #       COULD just be complete by default...
     if suite_config.has_e927 :
+<<<<<<< HEAD
       self.add_task("prep_lbc").add(
         Trigger("./retrieve_lbc == complete"),
         Edit(NODE_SELECT = "@SELECT_PRE@",
             WALLTIME = "@WALLTIME_PRE:0:15:00@"),
         Meter("lbc_counter", -1, fclen))
+=======
+      if suite_config.lbc_in_loop :
+        self.add_task("prep_lbc_loop").add(
+          Trigger("./retrieve_lbc == complete"),
+          Edit(NODE_SELECT = "@SELECT_PRE@",
+              WALLTIME = "@WALLTIME_PRE:0:15:00@"),
+          Meter("lbc_counter", -1, fclen))
+      else :
+        lbcfam = self.add_family("prep_lbcs")
+        for hh in range(fclen + 1):
+            lnode = lbcfam.add_family("%02d" % hh)
+            lnode.add_task("prep_lbc").add(
+                    Trigger("../../retrieve_lbc:lbc_counter >= "+str(hh)),
+                    Edit(LHH = "%02d" % hh ,
+                         WALLTIME="@WALLTIME_PRE@",
+                         NODE_SELECT="@SELECT_PRE@"), InLimit("max_lbc"))
+>>>>>>> 7b69f59... update ATOS ini files
     #  for (i in range(0, fclen+1)) :
     #    self.add(Family("%02d"%i).add(
     #       Task("retrieve_lbc"...
@@ -218,10 +267,18 @@ class nr_lbc(Family):
   #   Is this possible?
     if suite_config.has_surfex :
       # trigger prep if 00h LBC is ready
+<<<<<<< HEAD
       if suite_config.has_e927 :
         sfx_trigger = "../lbc:LAUNCH_00 == set"
       else :
         sfx_trigger = "./retrieve_lbc == complete"
+=======
+#      if suite_config.has_e927 :
+#        sfx_trigger = "../lbc:LAUNCH_00 == set"
+#      else :
+#        sfx_trigger = "./retrieve_lbc == complete"
+      sfx_trigger = "./retrieve_lbc == complete or ./retrieve_lbc:lbc_counter > 0"
+>>>>>>> 7b69f59... update ATOS ini files
       self.add_task("prep_sfx").add(
            Edit(NODE_SELECT = "@SELECT_PRE@",
             WALLTIME = "@WALLTIME_PRE:0:15:00@"),
@@ -443,6 +500,11 @@ class nr_time_alert(Task):
   def __init__(self, suite_config):
     Task.__init__(self, "time_alert")
     compl = "./finish == complete "
+<<<<<<< HEAD
+=======
+    if suite_config.delay_mode :
+      compl = compl + " || /{0}:DELAY == set".format(suite_config.suite_name)
+>>>>>>> 7b69f59... update ATOS ini files
 
     self.add(
       Edit(suite_config.jobs["localjob"]),

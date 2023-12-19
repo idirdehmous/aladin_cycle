@@ -29,6 +29,7 @@ class nr_suite_config :
 #    self.username = pwd.getpwuid(self.userid)[0]
 
     # PLATFORM
+<<<<<<< HEAD
     # we could simply load "all entries"
     # but doing each seperately allows for default values...
     self.localhost = str(config.get("platform", "localhost", fallback = "localhost"))
@@ -40,6 +41,13 @@ class nr_suite_config :
             "HPC_HEADER":str(config.get("platform", "HPC_HEADER",
                 fallback = "slurm.h")).strip(),
             "ENV_ALADIN":str(config.get("platform", "ENV_ALADIN")).strip(),
+=======
+    self.localhost = str(config.get("platform", "localhost", fallback = "localhost"))
+    self.platform = {
+            "PLATFORM":str(config.get("platform", "PLATFORM", fallback = "default")).strip(),
+            "HPC_HEADER":str(config.get("platform", "HPC_HEADER",
+                fallback = "slurm.h")).strip(),
+>>>>>>> 7b69f59... update ATOS ini files
             "ECF_JOB_CMD":str(config.get("platform", "ECF_JOB_CMD",
                 fallback = "@ECF_JOB@ 1>@ECF_JOBOUT@ 2>&1")).strip(),
             "ECF_KILL_CMD":str(config.get("platform", "ECF_KILL_CMD",
@@ -49,7 +57,11 @@ class nr_suite_config :
             }
     # SUITE
     self.mode = str(config.get("suite", "suite_mode", fallback="exp")).strip()
+<<<<<<< HEAD
 #    self.delay_mode = config.getboolean("suite", "delay_mode", fallback = False)
+=======
+    self.delay_mode = config.getboolean("suite", "delay_mode", fallback = False)
+>>>>>>> 7b69f59... update ATOS ini files
     self.wait_mode = config.getboolean("suite", "wait_mode", fallback = False)
     self.suite_type = config.get("suite", "suite_type", fallback="forecast_cycle")
     self.realtime = config.getboolean("suite", "realtime", fallback="no")
@@ -93,13 +105,24 @@ class nr_suite_config :
       self.runlist = list(map(int,map(str.strip, str(config.get("cycle", "runcycles")).split(","))))
       self.has_postproc = ("postproc" in config.sections()) and (len(config.items("postproc")) > 0)
       self.max_postproc = config.getint("settings", "MAX_POSTPROC", fallback=30)
+<<<<<<< HEAD
+=======
+      self.max_lbc = config.getint("settings", "MAX_LBC", fallback=30)
+>>>>>>> 7b69f59... update ATOS ini files
       self.has_products = ("products" in config.sections()) and (len(config.items("products")) > 0)
       self.has_lagged = ("lagged" in config.sections()) and (len(config.items("lagged")) > 0)
       self.trigger = str(config.get("suite", "trigger", fallback=""))
       self.has_trigger = self.trigger != ""
       self.has_clock = self.realtime and config.get("cycle", "trigger_time") != ""
       self.has_alert = config.get("settings", "WALLTIME_CYCLE", fallback="") != ""
+<<<<<<< HEAD
       self.has_assimilation = config.getboolean("assimilation", "assimilation")
+=======
+      if "assimilation" not in config.sections() :
+        self.has_assimilation = False
+      else :
+        self.has_assimilation = config.getboolean("assimilation", "ASSIMILATION")
+>>>>>>> 7b69f59... update ATOS ini files
       self.has_dfi = config.getboolean("model", "DFI")
       self.forecast_length = config.getint("cycle", "forecast_length")
       if self.forecast_length < self.cycle_inc :
@@ -119,6 +142,10 @@ class nr_suite_config :
     if self.has_forecast :
       # coupling
       self.lbc_inc = config.getint("coupling", "LBC_INC")
+<<<<<<< HEAD
+=======
+      self.lbc_in_loop = config.getboolean("coupling", "LBC_IN_LOOP", fallback = True)
+>>>>>>> 7b69f59... update ATOS ini files
       model_domain = config.get("model", "DOMAIN")
       self.coupling_strategy = config.get("coupling", "COUPLING", fallback = "unknown")
       coupling_domain = config.get("coupling", "COUPLING_DOMAIN", fallback = model_domain)
@@ -141,6 +168,7 @@ class nr_suite_config :
     # ASSIMILATION SETTINGS #
     #########################
 
+<<<<<<< HEAD
     if not self.has_assimilation :
       self.assim_var = { "ASSIMILATION":"no" }
     else :
@@ -168,6 +196,16 @@ class nr_suite_config :
       # FIXME: do canari and screening ALWAYS have to be == npool?
       self.odb_arch = config.getboolean("assimilation", "odb_arch", fallback=False)
 
+=======
+    if self.has_assimilation :
+    # TODO: more robustness, fallback values... it's still a bit of a mess
+      self.assim_upper = config.get("assimilation", "ASSIM_UPPER")
+      self.assim_surface = config.get("assimilation", "ASSIM_SURFACE")
+      self.fg_max = config.getint("assimilation", "FG_MAX", fallback=self.cycle_inc)
+
+      # we may want to add robustness by storing a "pre-first guess" for later cycles
+      # FIXME: do canari and screening ALWAYS have to be == npool?
+>>>>>>> 7b69f59... update ATOS ini files
 
   def has_wait(self, i):
     if self.wait_mode :

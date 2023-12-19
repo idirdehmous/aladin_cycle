@@ -83,6 +83,10 @@ variables = {
 suite.add(Edit(variables))
 
 # JOB SUBMISSION etc. #
+<<<<<<< HEAD
+=======
+# defined in modules/arch/<platform>.py
+>>>>>>> 7b69f59... update ATOS ini files
 suite.add(Edit(suite_config.platform))
 
 ### variables for PBS/user/ecFlow/hpc...
@@ -107,6 +111,11 @@ suite.add_variable(default_job)
 section_list = ["settings", "local", "tasks"]
 if suite_config.suite_type in [ "forecast_cycle", "Bmatrix" , "case_runner"] :
   section_list += ["model", "coupling"]
+<<<<<<< HEAD
+=======
+if suite_config.has_assimilation :
+  section_list += [ "assimilation" ]
+>>>>>>> 7b69f59... update ATOS ini files
 
 for section in section_list :
   # TODO: check all entries? default values?
@@ -117,15 +126,22 @@ for section in section_list :
 # FIXME: such limits should be defined somewhere else (platform?)
 if suite_config.has_forecast :
   suite.add_limit("max_postproc", suite_config.max_postproc)
+<<<<<<< HEAD
+=======
+  suite.add_limit("max_lbc", suite_config.max_lbc)
+>>>>>>> 7b69f59... update ATOS ini files
 
 # never allow two main "init sync" tasks at the same time!
 suite.add_limit("max_init", 1)
 # never allow two main "sync scratch" tasks at the same time!
 suite.add_limit("max_sync", 1)
 
+<<<<<<< HEAD
 # assimilation settings:
 suite.add(Edit(suite_config.assim_var))
 
+=======
+>>>>>>> 7b69f59... update ATOS ini files
 # The SCHOST label is useful
 suite.add_label("SCHOST", suite_config.hpc_host)
 

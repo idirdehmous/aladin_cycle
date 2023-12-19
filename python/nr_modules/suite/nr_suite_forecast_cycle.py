@@ -15,6 +15,11 @@ def build_suite(suite, suite_config, config) :
 
 # variables are easy to pass to jobs
 # but they can not be used in triggers unless they are numeric (no string comparisons!)
+<<<<<<< HEAD
+=======
+# so we define an event to indicate whether we are in real time or delayed mode.
+# (exp mode for experiments is, by definition, not real-time)
+>>>>>>> 7b69f59... update ATOS ini files
 # ATTENTION: you can not initialise an event to "set" with add_event
 #            maybe it can be done another way???
 #            maybe using events in this way is not ideal
@@ -23,8 +28,17 @@ def build_suite(suite, suite_config, config) :
 
   if suite_config.realtime :
     suite.add_variable("REALTIME", "yes")
+<<<<<<< HEAD
   else:
     suite.add_variable("REALTIME", "no")
+=======
+    if suite_config.delay_mode :
+      suite.add_variable("DELAY", "no")
+      suite.add_event("DELAY") #.force_event("set")
+  else:
+    suite.add_variable("REALTIME", "no")
+#    suite.add_variable("DELAY", "no") # a bit strange...
+>>>>>>> 7b69f59... update ATOS ini files
 
 # From experience, we know that HPC can get into problems with i/o
 # So we must limit the number of post-processing jobs
@@ -46,6 +60,11 @@ def build_suite(suite, suite_config, config) :
 ########################
 
   suite.add_label("LAST_RUNNING", "")
+<<<<<<< HEAD
+=======
+  suite.add_label("LAST_QUEUED", "")
+  suite.add_variable("LAST_QUEUED", "")
+>>>>>>> 7b69f59... update ATOS ini files
   if not suite_config.has_loop :
     suite.add_label("LAST_QUEUED", "")
     suite.add_variable("LAST_QUEUED", "")
@@ -69,7 +88,11 @@ def build_suite(suite, suite_config, config) :
                   PREV_RUN=suite_config.prev_run(i),
                   NEXT_RUN=suite_config.next_run(i)
                   )
+<<<<<<< HEAD
     if not suite_config.has_loop :
+=======
+    if not suite_config.has_loop : 
+>>>>>>> 7b69f59... update ATOS ini files
       mhour += Edit(YMD="")
 
 
@@ -81,6 +104,7 @@ def build_suite(suite, suite_config, config) :
     if suite_config.has_wait(i) :
       mhour += nr_wait(suite_config, i)
     elif suite_config.realtime :
+<<<<<<< HEAD
       # mhour.add(Time(suite_config.cycle_times[i]))
       # NOTE: if e.g. a 21h cycle should be triggered after 00h, we must increase the date!
       #        otherwise the cycle could be triggered much too soon
@@ -95,6 +119,10 @@ def build_suite(suite, suite_config, config) :
       cycle_trigger = f"(:TIME ge {triggertime} AND :ECF_DATE ge {ymd}) OR (:ECF_DATE gt {ymd})"
 
       mhour.add(Trigger(cycle_trigger))
+=======
+      # NOTE: a time setting is harder to skip in delay mode...
+      mhour.add(Time(suite_config.cycle_times[i])) 
+>>>>>>> 7b69f59... update ATOS ini files
 
     ## Initialisation
     mhour += nr_initialisation(suite_config, i)
