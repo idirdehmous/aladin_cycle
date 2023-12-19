@@ -1,11 +1,20 @@
+<<<<<<< HEAD
 @manual
 Placeholder script. On some platforms, a log server is needed.
 @end
 @include <@HEAD:head.h@>
+=======
+#! /bin/bash
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 # Start the logserver if it isn't running yet.
 # NOTE: it must run on ECF_LOGHOST, not on a compute node!
 HPC_USER=@HPC_USER:$USER@
 ssh -l @HPC_USER@ @ECF_LOGHOST@ "module load ecflow/@ECF_VERSION@ ; ecflow_logserver.sh -p @ECF_LOGPORT@ "
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

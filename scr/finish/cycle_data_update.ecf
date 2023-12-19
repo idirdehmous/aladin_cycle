@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+@include <@HPC_HEADER@>
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 Cleanup old "first_guess" files from SCRATCH.
 This task also makes sure that the "backup" scratch directory is syncronised.
@@ -12,8 +17,11 @@ Setting this task to complete will not harm the current cycle, but may cause pro
 
 NOTE: this task is run "InLimit(max_sync)". This is to avoid that 2 tasks from different cycles could run at the same time.
 @end
+<<<<<<< HEAD
 @include <@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 set -x
@@ -55,5 +63,9 @@ fi
 #  rsync -a --delete $BASEDIR/cycle/ $BASEDIR2/cycle
 #fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

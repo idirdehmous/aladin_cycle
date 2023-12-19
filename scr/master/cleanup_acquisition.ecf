@@ -7,7 +7,11 @@ This is a regular task to clean up the acquisition data (mainly LBC data) in TCW
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 # how long can data stay on TCWORK?
 # "find" works in days
@@ -30,5 +34,9 @@ for path in $PATH_LIST ; do
   fi
 done
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

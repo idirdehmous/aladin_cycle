@@ -11,7 +11,11 @@ This task should only be triggered by setting the "DELAY" event.
 That can be done manually or automatically during the initialisation of a cycle.
 
 @end
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 ecflow_client --alter=change variable DELAY "yes" /@SUITE@
 ## remove "-r" from QSUBOPT (don't use reserved queue in delayed mode)
@@ -20,5 +24,9 @@ ecflow_client --alter=change variable DELAY "yes" /@SUITE@
 #fi
 ecflow_client --requeue  /@SUITE@/@FAMILY@/reset_delay
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

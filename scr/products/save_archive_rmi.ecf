@@ -3,7 +3,11 @@
 This task selects some fields from the basic fullpos to create the smaller files that are archived.
 @end
 
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # Load modules
@@ -89,4 +93,8 @@ rsync $tarfile ${ARCH_HOST}:$adir
 #archive_save $tarfile ${ARCH_HOST}:$adir
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

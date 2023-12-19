@@ -15,7 +15,11 @@ Failure most likely is a result from missing or corrupted input files.
 @include <manual_common.h>
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -171,5 +175,9 @@ fi
 ls -al
 #  mv -f ICMSH${CNMEXP}+0000 ICMSH${CNMEXP}INIT
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

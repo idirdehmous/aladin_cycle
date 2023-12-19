@@ -20,7 +20,11 @@ If this task fails, it is most probable that the integration task also failed.
 @include <manual_common.h>
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -43,6 +47,13 @@ OK=1
 while [[ $OK == 1 ]] ; do
   if [[ -e ${LDT_FILE} ]] ; then
     hh2=`cat $LDT_FILE`
+<<<<<<< HEAD
+=======
+    if [[ $hh2 == "" ]] ; then
+      # very rarily, you may have caught the file while being rewritten
+      hh2=0
+    fi
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
     if (( 10#$hh2 > 10#$hh )) ; then
       # we have progressed 1 (or more!) hours
       echo "step $hh2 `date -u `"
@@ -58,7 +69,10 @@ while [[ $OK == 1 ]] ; do
             io_serv.000*/ICMSH${CNMEXP}+00${hh1}.speca.???? \
             ICMSH${CNMEXP}+00${hh1}.tot
           mv ICMSH${CNMEXP}+00${hh1}.tot ICMSH${CNMEXP}+00${hh1}
+<<<<<<< HEAD
           sync ICMSH${CNMEXP}+00${hh1}
+=======
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
           echo "OK $hh1 `date +%H:%M:%S`"
 
         # NOTE: sfx seems to write a part to the root directory as well...
@@ -74,7 +88,10 @@ while [[ $OK == 1 ]] ; do
               io_serv.000*/ICMSH${CNMEXP}+00${hh1}.sfx \
               ICMSH${CNMEXP}+00${hh1}.sfx.tot
             mv ICMSH${CNMEXP}+00${hh1}.sfx.tot ICMSH${CNMEXP}+00${hh1}.sfx
+<<<<<<< HEAD
             sync ICMSH${CNMEXP}+00${hh1}.sfx
+=======
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
           fi
           ecflow_client --meter forecast_counter $hh1
         done
@@ -115,5 +132,9 @@ else
   exit 1
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

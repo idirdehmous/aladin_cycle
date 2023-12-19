@@ -3,13 +3,24 @@ This task is triggered if the cycle runs too late.
 It merely raises an alert, it doesn't investigate, fix or re-queue anything.
 @include <manual_common.h>
 @end
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 # Send an e-mail explicitly?
 
 # we now simply raise a warning message in the suite
 # if the "WARNING" label already exists, we overwrite it
+<<<<<<< HEAD
 show_warning "$RUNDATE delayed!" /@SUITE@
 
 @include <@TAIL:tail.h@>
+=======
+show_warning "$RUNDATE delayed!"
+
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

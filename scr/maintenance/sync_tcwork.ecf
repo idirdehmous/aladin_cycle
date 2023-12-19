@@ -6,8 +6,13 @@ Normally this should be very fast, as these directories don't change
 But it's not a bad idea to check this once in a while.
 NOTE however, that we should probably avoid running this task inside multiple suites.
 @end
+<<<<<<< HEAD
 @include<@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+@include<@HPC_HEADER@
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 STHOST=@STHOST@
@@ -23,5 +28,9 @@ mkdir -p ${TCWORK2}/$MAINDATA
 rsync -a $TCWORK/${MAINDATA} $TCWORK2/${MAINDATA}
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

@@ -10,7 +10,11 @@ If failure persists, check whether the location of the data is correctly mounted
 Do not set complete!
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 @include <settings.h>
 @include <@ENV_ALADIN@>
@@ -47,17 +51,34 @@ if [[ $RUNMODE == "oper" ]] ; then
   [ "@MASTERODB_FC:@" ] && rsync -avz @MASTERODB_FC:@ ${d_BIN}/MASTERODB_FC
   [ "@MASTERODB_POS:@" ] && rsync -avz @MASTERODB_POS:@ ${d_BIN}/MASTERODB_POS
   [ "@MASTERODB_PRE:@" ] && rsync -avz @MASTERODB_PRE:@ ${d_BIN}/MASTERODB_PRE
+<<<<<<< HEAD
+=======
+  [ "@MASTERODB_MINIM:@" ] && rsync -avz @MASTERODB_MINIM:@ ${d_BIN}/MASTERODB_MINIM
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   [ "@BATOR:@" ] && rsync -avz @BATOR:@ ${d_BIN}/BATOR
 else
   # remove any links or files that still exist before making new links?
   # NO! this could momentarily interfere with other running cycles!
   # if you really need this, do it manually from the maintenance tasks
   # rm -rf ${d_CLIM}/* ${d_CONST}/* ${d_BIN}/*
+<<<<<<< HEAD
   ln -sf $DPATH_CLIM/*  $d_CLIM
+=======
+  if [ -d $DPATH_CLIM ] ; then
+    ln -sf $DPATH_CLIM/*  $d_CLIM
+  else
+    echo "$DPATH_CLIM not found"
+    exit 1
+  fi
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   ln -sf $PACKDIR/bin/* $d_BIN
   [ "@MASTERODB_FC:@" ] && ln -sf @MASTERODB_FC:@ ${d_BIN}/MASTERODB_FC
   [ "@MASTERODB_POS:@" ] && ln -sf @MASTERODB_POS:@ ${d_BIN}/MASTERODB_POS
   [ "@MASTERODB_PRE:@" ] && ln -sf @MASTERODB_PRE:@ ${d_BIN}/MASTERODB_PRE
+<<<<<<< HEAD
+=======
+  [ "@MASTERODB_MINIM:@" ] && ln -sf @MASTERODB_MINIM:@ ${d_BIN}/MASTERODB_MINIM
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   [ "@BATOR:@" ] && ln -sf @BATOR:@ ${d_BIN}/BATOR
 fi
 
@@ -82,5 +103,9 @@ if [[ $ASSIMILATION == "yes" ]] ; then
 fi
 
 echo === FINISHED ===
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

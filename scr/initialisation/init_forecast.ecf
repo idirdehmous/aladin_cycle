@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash  
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 This tasks prepares the labels and date variables for the forecast.
 It also checks whether we are still running in time.
@@ -5,8 +9,14 @@ It also checks whether we are still running in time.
 Not sure how this task could fail (only ecflow_client commands). Check if the suite was restarted manually with a bad date string.
 
 @end
+<<<<<<< HEAD
 @include <@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+
+@include <@HPC_HEADER@>
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 set -x
@@ -15,19 +25,37 @@ set -x
 ecflow_client --alter=change label LAST_RUNNING "$RUNDATE" /@SUITE@
 ecflow_client --alter=change label RUNDATE "$RUNDATE" /@SUITE@/cycle/@THIS_RUN@/
 
+<<<<<<< HEAD
+=======
+
+# MOVED HERE BECAUSE CAUSES CRASH BY "FREEZING" !
+ if [[ $SURFACE == surfex ]] ; then
+    # if it isn't a cold start, no need to run prep_sfx
+    ecflow_client --force=complete recursive /@SUITE@/cycle/@THIS_RUN@/initialisation/init_forecast
+    ecflow_client --force=complete recursive /@SUITE@/cycle/@THIS_RUN@/lbc/prep_sfx  
+ fi
+
+@include <tail.h>
+
+
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 # SCHOST (and STHOST) labels
 ecflow_client --alter=change label SCHOST "@SCHOST@" /@SUITE@
 if [ @STHOST:@ ] ; then
   ecflow_client --alter=change label STHOST "@STHOST:@" /@SUITE@
 fi
 
+<<<<<<< HEAD
 # clear warnings
 clear_warning /@SUITE@
 clear_warning /@SUITE@/cycle/@THIS_RUN@
+=======
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 # for realtime suite:
 #   check date & time
 # Basically, when this task is running, any time trigger has been either fulfilled or skipped
+<<<<<<< HEAD
 
 # FIXME: this should depend on TRIGGER time
 #DELAY_THRESHOLD=8
@@ -39,6 +67,37 @@ clear_warning /@SUITE@/cycle/@THIS_RUN@
 #      show_warning("Forecast was started BEFORE trigger time.", @SUITE@)
 #    fi
 #fi
+=======
+#   so we need to check: if we are in "delay" mode: if "now" is /before/ the trigger time
+#   we must definitely unset the "delay" switch.
+# On the other hand, if "now" is later than RUNDATE+X, we are definitely in delay.
+
+      # NOTE: we can set "delay" automatically, but setting it off is harder
+      # because jobs can be triggered in advance, so you need to turn it off in time!
+
+# the most important part is to make sure we don't "miss" time triggers.
+# if a job is triggered a bit too soon, that usually won't matter so much
+#   because it will wait for the first_guess anyway.
+#   And we can also have triggering by other models, which keeps us in sync as long as we stay close.
+
+# TODO: add a "DELAY_THRESHOLD" (e.g. 6h, but more when coupling to HRES)
+# FIXME: this should also depend on TRIGGER time
+DELAY_THRESHOLD=8
+if [[ @REALTIME@ == yes && @DELAY_MODE:no@ == yes ]] ; then
+  if [[ @DELAY:no@ == no ]] ; then
+    if [[ $(date -u -d "now -10 hours" +%Y%m%d%H) -ge $RUNDATE ]] ; then
+      echo RUNDATE out of sync: running $RUNDATE on $(date -u +%Y%m%d%H)
+      ecflow_client --force=set /@SUITE@:DELAY 
+    fi
+  else
+    # if we are less than ~7h behind the current forecast date, we are no longer in "delay"
+    if [[ $(date -u -d "now -6 hours" +%Y%m%d%H) -le $RUNDATE ]] ; then
+      echo RUNDATE back in sync
+      ecflow_client --force=clear /@SUITE@:DELAY
+    fi
+  fi
+fi
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 if [[ $ASSIMILATION == yes ]] ; then
   CYCLEPATH=$(dirname /@SUITE@/@FAMILY@)
@@ -52,5 +111,9 @@ if [[ $ASSIMILATION == yes ]] ; then
   fi
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

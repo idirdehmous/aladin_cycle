@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 DESCRIPTION:
 A generic post-processing task (FulPos).
@@ -19,7 +23,11 @@ If the task fails in the 927 step itself, check the log files in the working dir
 @include <manual_common.h>
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -141,8 +149,15 @@ for pp_domain in ${domain_list[@@]} ; do
   fi
   mv $outfile ${d_POST}/$fafile
 done
+<<<<<<< HEAD
 sync ${d_POST}
 echo === FINISHED ===
 
 @include <@TAIL:tail.h@>
+=======
+
+echo === FINISHED ===
+
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

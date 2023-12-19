@@ -8,7 +8,12 @@ NEVER run this script while there are still jobs running or queued in the suite!
 After the switch, all jobs will use the other scratch. This will can also be seen from the SCRATCH variable in ecflow.
 
 @end
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # WARNING: running this script while a cycle is running
@@ -26,4 +31,8 @@ for ddir in $dirlist ; do
 done
 ssh -l$HPC_USER $SCHOST "ln -sfn $BASEDIR2 @HPC_HOMEBASE@/@SUITE@"
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

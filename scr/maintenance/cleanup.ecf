@@ -1,8 +1,15 @@
 @manual
 This is a place holder script. Doesn't do anything unless you add it.
 @end
+<<<<<<< HEAD
 @include <@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+
+#!/bin/bash
+@include <@HPC_HEADER@>
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 module load ecflow/@ECF_VERSION@
@@ -13,4 +20,8 @@ umask 0022
 cd ${d_CYCLE}
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

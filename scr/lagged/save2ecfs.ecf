@@ -12,7 +12,11 @@ If failure persists and no solution is available, set to complete and warn .
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 set -x
@@ -20,7 +24,11 @@ set -x
 # normally, the first_guess should have been archived in previous cycle
 
 #ARCH_CYCLE=@ARCH_CYCLE:"ec:ARCHIVE/${CNMEXP}/CYCLE"@
+<<<<<<< HEAD
 ARCH_PATH=@ARCH_PATH:"ectmp:ARCHIVE/$CNMEXP"@
+=======
+ARCH_PATH=@ARCH_PATH:"ec:ARCHIVE/$CNMEXP"@
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
 cd $cyclepath
@@ -44,6 +52,7 @@ if [[ $ASSIMILATION == "yes" ]] ; then
 
   # ODB data
   tarfile=ODB_${CNMEXP}_${RUNDATE}.tar
+<<<<<<< HEAD
   if [ -e ECMA.tar ] ; then
     tar -cf $tarfile  ECMA*
     # rm -rf ECMA*
@@ -52,12 +61,43 @@ if [[ $ASSIMILATION == "yes" ]] ; then
     tar -rf $tarfile CCMA*
     # rm -rf CCMA*
   fi
+=======
+  # BATOR AND CANARI 
+   [ -e ECMA_surface_${RUNDATE}.tar ] && tar -cf $tarfile  ECMA_surface_${RUNDATE}.tar
+   [ -e ECMA_upper_${RUNDATE}.tar ]   && tar -cf $tarfile  ECMA_upper_${RUNDATE}.tar
+   [ -e ECMA_canari_${RUNDATE}.tar ]  && tar -cf $tarfile  ECMA_canari_${RUNDATE}.tar
+
+# SCREEN AND MINIM 
+   [ -e CCMA_screen_${RUNDATE}.tar ]  && tar -cf $tarfile  CCMA_screen_${RUNDATE}.tar  
+   [ -e CCMA_minim_${RUNDATE}.tar ]   && tar -cf $tarfile  CCMA_minim_${RUNDATE}.tar
+
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   [ -e $tarfile ] && {
     ecp $tarfile $archpath
     rm -f $tarfile
   }
 fi
 
+<<<<<<< HEAD
+=======
+# reduced forecast files
+case $RR in 
+	00|06|12|18 )
+tarfile=FC_${CNMEXP}_${RUNDATE}.tar
+#[ -e $tarfile ] && {
+  archpath=${ARCH_PATH}/FC/$YYYY/$MM/$DD
+  emkdir -p $archpath
+  cd ${d_POST}
+  tar -cvf  ${tarfile}   *.fa    
+  echo "Archiving FULLPOS FILES  at `date -u`"
+  ecp $tarfile $archpath  ;;  
+  esac   
+  rm -f $tarfile
+#}
+
+@include <tail.h> 
+
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 # historical files
 tarfile=HIST_${CNMEXP}_${RUNDATE}.tar
 [ -e $tarfile ] && {
@@ -85,11 +125,19 @@ tarfile=FC_${CNMEXP}_${RUNDATE}.tar
 [ -e $tarfile ] && {
   archpath=${ARCH_PATH}/FC/$YYYY/$MM/$DD
   emkdir -p $archpath
+<<<<<<< HEAD
   echo "Archiving LBC's at `date -u`"
+=======
+  echo "Archiving FULLPOS FILES  at `date -u`"
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   ecp $tarfile $archpath
 #  rm -f $tarfile
 }
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

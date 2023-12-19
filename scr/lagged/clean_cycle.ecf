@@ -4,7 +4,11 @@ This is a lagged task to clean up the cycle data (first guess, analysis of previ
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # how long can cycle day stay on TCWORK?
@@ -49,5 +53,9 @@ if [ -e ${d_CYCLE}/$myyyy/$mmm/$mdd ] ; then
   done
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

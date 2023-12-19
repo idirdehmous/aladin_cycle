@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 set -x
@@ -7,4 +11,8 @@ arch_path_echk=${ARCH_PATH}/ABOF/${CNMEXP,,}/$RR
 cd ${d_FC}
 afd_save ICMSH${CNMEXP}CHKOUT2 ${ARCH_HOST}:$arch_path_echk
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

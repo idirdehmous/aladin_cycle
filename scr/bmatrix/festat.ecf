@@ -5,7 +5,11 @@ From (GRIB) model differences created by "FEMARS" a B matrix is produced.
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -55,4 +59,8 @@ sed -e  "s/{stabbal_file}/@OUTBAL@/g" \
 
 ${MPIRUN} FESTAT  > out.log   2>err.log
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

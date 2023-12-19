@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 RMI-only
 This task extracts point data from the mode output and writes it to Oracle. The actual R scripts are installed on moria.
@@ -29,4 +33,8 @@ RR=@RR@
 #        in the future, this job should run on Moria directly via ecflow
 ssh -l ${GRAB_USER} ${GRAB_HOST} alaro/GRAB/grab.scr_oper $RR $LABEL
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

@@ -9,7 +9,11 @@ NOTE: usually, all this data is sync\'ed between the two working directories by 
 
 @end
 @include<@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 STHOST=@STHOST@
@@ -30,5 +34,9 @@ else
   tar xf NRD.tar
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

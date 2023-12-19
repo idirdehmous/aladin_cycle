@@ -8,8 +8,14 @@ Try re-running init_suite/create_hpc_paths before re-running this task.
 This task uses scp rather than rsync, because rsync requires bi-directional ssh keys rather than just ecflow server to HPC. On ECMWF Atos they actually share their home directory, but that is not always the case.
 
 @end
+<<<<<<< HEAD
 @include <@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+
+@include <@HPC_HEADER@>
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # We prefer to run as a "local" job on the ecflow server side
@@ -26,4 +32,8 @@ fi
 #mkdir -p $d_NAMELIST
 #rsync @SUITE_DATA@/name/${NAMELIST_VERSION}/ $d_NAMELIST
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

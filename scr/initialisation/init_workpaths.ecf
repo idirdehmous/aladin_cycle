@@ -9,7 +9,11 @@ to move the whole suite to another scratch directory.
 Do not set complete!
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
 @include <settings.h>
 @include <@ENV_ALADIN@>
@@ -28,15 +32,29 @@ mkdir -p ${d_POST}
 if [[ $ASSIMILATION == yes ]] ; then
 # FIXME: this "hard-codes" some paths
 #        some are not needed, for instance if there is no 3d Var
+<<<<<<< HEAD
   mkdir -p $d_OBS
   mkdir -p $d_ODB
   mkdir -p $d_GUESS
   for label in surface upper ; do
     mkdir -p ${WORKDIR}/assimilation/${label}/bator
     mkdir -p ${WORKDIR}/assimilation/${label}/addfields
+=======
+#  mkdir -p $d_OBS
+#  mkdir -p $d_ODB
+  mkdir -p $d_GUESS
+  for label in surface upper ; do
+    for dir in bator addfields obs odb ; do
+      mkdir -p ${WORKDIR}/assimilation/${label}/${dir}
+    done
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   done
 fi
 
 echo === FINISHED ===
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

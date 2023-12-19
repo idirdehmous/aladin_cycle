@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 This task checks whether the next cycle has been queued. Normally it has (task queue_next runs at the start of the cycle), but in some special cases it may be stalled:
 1. if this is a re-queued cycle, the next cycle may already be queued, so queue_next can not run again.
@@ -8,7 +12,10 @@ In the first case, "queue_next" should be set complete so that the current cycle
 This is not perfect. If you are e.g. re-running with the purpose of also re-running all next cycles as well, you will have to make sure manually that they are "complete".
 
 @end
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # This job should only be triggered if "queue_next" is not complete!
@@ -28,5 +35,9 @@ if [[ "@LAST_QUEUED@" == "" || "@LAST_QUEUED@" -ge $NEXT_RUNDATE ]] ; then
   ecflow_client --force=complete /@SUITE@/cycle/@THIS_RUN@/queue_next
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

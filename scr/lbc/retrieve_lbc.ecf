@@ -1,9 +1,17 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash  
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 DESCRIPTION:
 This task retrieves the LBCs (boundary conditions) for the forecast.
 
 The source data may be in different forms.
+<<<<<<< HEAD
 CPL_TEMPLATE (if defined) is a template with full path where the input files can be retrieved locally.
+=======
+CPL_TEMPLATE (iif defined) is a template with full path where the input files can be retrieved locally.
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 Otherwise, "retrieve_lbc" is a function defined in the local settings (/include/settings_local_<platform>.h).
 
 At the end of the task, LBC_<hh> files should be ready, with the (possible) lag taken into account.
@@ -19,18 +27,30 @@ That would result in the task issuing a warning and waiting until wall time is r
 
 If the output shows another error, it probably indicates a corrupted LBC file.
 
+<<<<<<< HEAD
 For missing or corrupted LBC's, contact asap:
 - AO40: contact RMI for missing Arpege coupling data
 - AO13 & AR13: check with TC3 task for LBC generation
 
 ANALYSTS:
+=======
+For missing or corrupted LBC s, contact asap:
+- AO40: contact RMI for missing Arpege coupling data
+- AO13 & AR13: check with TC3 task for LBC generation
+
+ANALYSIS:
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 Check the task output to identify the cause of the error. Missing or corrupted LBC files must be re-sent.
 
 @include <manual_common.h>
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -64,6 +84,11 @@ fi
 # The actual retrieval is a local function (settings_local_${PLATFORM}.h) or uses a simple template
 CPL_TEMPLATE=@CPL_TEMPLATE:@
 if [[ ${CPL_TEMPLATE} != "" ]] ; then
+<<<<<<< HEAD
+=======
+
+  cd ${d_LBC}/input
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   for hh in $hhlist ; do
     # use a simple LBC template
     LHH=$(printf "%02g" $(( 10#$hh + 10#$LBC_LAG )) )
@@ -81,15 +106,32 @@ if [[ ${CPL_TEMPLATE} != "" ]] ; then
       sleep 60
     done
 
+<<<<<<< HEAD
     ln -sf ${fname} LBC_$hh
     # NOTE: copy or link ?
 #    cp ${fname} LBC_$hh
     file_date=$(date -u -d "`fa_checkdate LBC_$hh`" +%Y%m%d%H)
+=======
+    # FIXME: InfoAbort will not be called when running over walltime
+    if [ -f $fname  ] ; then 
+      ln -sf ${fname} LBC_${hh}
+    else 
+      ERR_CODE=L-201 ;   InfoAbort   ${ERR_CODE}
+    fi     
+
+    # NOTE: copy or link ?
+#    cp ${fname} LBC_$hh
+    file_date=$(date -u -d "`pyfa date LBC_$hh`" +%Y%m%d%H)
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
     valdate=$(date -u -d "$YYYY$MM$DD $RR +$hh hours" +%Y%m%d%H)
     if [[ $file_date != $valdate ]] ; then
       echo "ERROR: Wrong file date!"
       echo "Expecting $RUNDATE + $hh = $valdate"
+<<<<<<< HEAD
       echo "File LBC_$hh has $(fa_checkdate LBC_$hh)= $file_date" 
+=======
+      echo "File LBC_$hh has $(pyfa date LBC_$hh)= $file_date" 
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
       exit 1
     fi
     ecflow_client --meter lbc_counter $hh
@@ -109,5 +151,9 @@ if [[ $COUPLING_DOMAIN  ==  $DOMAIN ]] ; then
   ecflow_client --force=set ${event_path}:LAUNCH_FC
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

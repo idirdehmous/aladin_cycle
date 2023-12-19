@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash  
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 This task initialises the "local alert". It sets a timer that will give an alert
 if the full cycle does not finish within a given time.
@@ -6,12 +10,26 @@ If WALLTIME_CYCLE > 0, the task ../time_alert is queued
 That task will simply show an error if it is not set to complete before "WALLTIME_CYCLE" minutes.
 
 @end
+<<<<<<< HEAD
 @include <@HPC_HEADER@>
 @include <@HEAD:head.h@>
+=======
+
+@include <@HPC_HEADER@>
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 set -x
 
+<<<<<<< HEAD
+=======
+
+ecflow_client --force=complete /@SUITE@/cycle/@THIS_RUN@/initialisation/set_alert
+ecflow_client --force=complete /@SUITE@/cycle/@THIS_RUN@/time_alert
+
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 # raise an alert if the whole cycle hasn't finished in N minutes:
 
 # NOTE: obviously, this should not be raised in DELAY mode
@@ -44,4 +62,8 @@ if [[ @WALLTIME_CYCLE:120@ -gt 0 ]] ; then
   ecflow_client --requeue $alert_task
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

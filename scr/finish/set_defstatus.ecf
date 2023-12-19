@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 This tasks changes the default status of the current cycle. It has finished, so it's set to defstatus complete. That way, if someone would re-queue the complete suite, this job will not run again.
 @end
@@ -8,5 +12,9 @@ This tasks changes the default status of the current cycle. It has finished, so 
 ecflow_client --alter=change defstatus complete /@SUITE@/cycle/@THIS_RUN@
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

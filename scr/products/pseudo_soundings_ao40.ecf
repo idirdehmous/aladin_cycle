@@ -4,7 +4,11 @@ This script produces Pseudo-soundings and listings from FA output. At this momen
 Historically, they were transfered to AFD into the GRIB directory.
 
 @end
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # Load modules
@@ -76,4 +80,8 @@ for NAM in ${ASdomnam} ; do
 
 done
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

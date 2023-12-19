@@ -1,11 +1,19 @@
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 This task queues the next cycle.
 If it fails, check that the next cycle is "completed". If it has running jobs, these may have to complete first. If there are aborted or failed tasks, and assuming they don't need to be re-run, you can set the cycle to "complete" recursively.
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 
 # check for a ENDDATE (default is "forever")
@@ -57,5 +65,9 @@ fi
 # so it is best to *also* reset the label in init_forecast.
 # Labels are only for information, anyway. They are *never* used in the suite.
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

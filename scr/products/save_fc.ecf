@@ -8,7 +8,11 @@ In case of failure:
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -55,7 +59,11 @@ cd ${d_POST}
 if [[ $CNMEXP == "AO40" ]] ; then
   FAUCON=${DPATH}/rmi-tools/faucon
   namelist=${d_NAMELIST}/nam_faucon
+<<<<<<< HEAD
   for hh in $(seq -f%02g 0 1 $HOURRANGE ) ; do
+=======
+  for hh in $(seq -f%02g 0 1 60 ) ; do
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 #    echo "$FAUCON -f${infile} -o${outfile} -n${namelist}"
     # in case of re-run: will fail if output file already exists!
     infile=${inf}${MM}${DD}${RR}_${hh}.fa
@@ -67,4 +75,8 @@ if [[ $CNMEXP == "AO40" ]] ; then
 fi
 tar -chf $tarfile ${inf}${MM}${DD}${RR}_??.fa
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE

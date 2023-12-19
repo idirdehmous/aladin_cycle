@@ -26,7 +26,11 @@ If failure persists, contact RMI and/or ECPDS resposible
 @include <manual_common.h>
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 set -x
 
@@ -37,7 +41,11 @@ set -x
 
 HH=@PPHH:00@
 
+<<<<<<< HEAD
 TRANSFER="mspds -force -destination @ECPDS_DESTINATION:TC2_RMI@ -verbose "
+=======
+TRANSFER="mspds -force -destination @ECPDS_DESTINATION:TC2_RMI@ -verbose -echost bodh1ecpmas-03 "
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 TARGET_PATH="@ECPDS_PATH:al_staging/${CNMEXP,,}@"/$RR
 METADATA="stream=${CNMEXP},date=${YYYY}${MM}${DD},time=${RR},step=${HH}"
 
@@ -49,6 +57,7 @@ tar -cf $tarfile *_${HH}.fa # PF${CNMEXP}*+00$HH
 # in case the forecast is finished, add other output files
 if [[ 10#$HH -eq $HOURRANGE ]] ; then
   cd $d_FC
+<<<<<<< HEAD
   # STEPS
   stepsfile=steps
   if [ -e $stepsfile ] ; then
@@ -64,11 +73,23 @@ if [[ 10#$HH -eq $HOURRANGE ]] ; then
       echo "Adding ${echkfile} to tar file $tarfile."
       tar -rf ${d_POST}/$tarfile $echkfile
   fi
+=======
+  for ff in steps ICMSH${CNMEXP}CHKOUT2 ; do
+    if [ -e $ff ] ; then
+      echo "Adding $ff to tar file $tarfile."
+      tar -rf ${d_POST}/$tarfile $ff
+    fi
+  done
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
   cd ${d_POST}
 fi
 
 module load ecaccess
 $TRANSFER -source $tarfile -target ${TARGET_PATH}/$tarfile -metadata $METADATA
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 

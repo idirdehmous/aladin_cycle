@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash  
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @manual
 DESCRIPTION:
 This task prepares the initial conditions for SURFEX from coupling files without surfex.
@@ -13,7 +17,11 @@ However, if ECF_TRYNO >= 3 then it will run anyway. This should be avoided!
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -25,12 +33,19 @@ umask 0022
 export DR_HOOK_NOT_MPI=
 export OMP_NUM_THREADS=1
 
+<<<<<<< HEAD
 
 # ONLY needed for surfex "cold start".
 # Usually, this job should *never run* (except the very first day).
 # Unless you are in dynamical adaptation, of course.
 # If ECF_TRYNO > 2, we assume you really want it to run.
 
+=======
+# ONLY needed for surfex "cold start".
+# Usually, this job should *never run* (except the very first day).
+# Unless you are in dynamical adaptation, of course.
+# If ECF_TRYNO > 2, we assume you really want it to run.  
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 if [[ $ASSIMILATION = yes && $COLDSTART != $RUNDATE && $ECF_TRYNO -le 2 ]] ; then
   echo "No prep needed."
   complete_and_exit
@@ -53,6 +68,19 @@ ln -sf ${d_LBC}/input/LBC_00 ICMSH${CNMEXP}INIT
 # Create namelist file
 NAMELIST="$( for nn in $NAMELIST_PREP_SFX ; do echo ${d_NAMELIST}/$nn ; done )"
 
+<<<<<<< HEAD
+=======
+# is input HUMI.SPECIFI GP or SP?
+humitype=`pyfa humi ICMSH${CNMEXP}INIT`
+if [[ $humitype == "gp" ]] ; then
+  LGP=".TRUE."
+  LSP=".FALSE."
+else
+  LGP=".FALSE."
+  LSP=".TRUE."
+fi
+
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 cat ${NAMELIST} | grep -v '^!' | sed \
     -e "s/!.*//"  \
     -e "s/NPROC=.*/NPROC=$NPROC/" \
@@ -60,6 +88,11 @@ cat ${NAMELIST} | grep -v '^!' | sed \
     -e "s/NSTROUT=.*/NSTROUT=$NPROC/" \
     -e "s/CNMEXP=.*/CNMEXP=\'$CNMEXP\'/"    \
     -e "s/CFPDOM(1)=.*/CFPDOM(1)=\'$DOMAIN\'/"    \
+<<<<<<< HEAD
+=======
+    -e "s/YQ_NL%LGP=.*/YQ_NL%LGP=$LGP/" \
+    -e "s/YQ_NL%LSP=.*/YQ_NL%LSP=$LSP/" \
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
    > fort.4
 
 # create surfex namelist file !?
@@ -93,5 +126,9 @@ else
   mv PF${CNMEXP}${DOMAIN}+0000.sfx ${d_LBC}/ICMSH${CNMEXP}INIT.sfx
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 71c8b7e... Don't rename ini/ATOS after all. Small fix for hardcoded HOURRANGE
 
