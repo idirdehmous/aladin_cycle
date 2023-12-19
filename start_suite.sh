@@ -20,3 +20,7 @@ else
   echo "Suite already exists. Running update_suite.sh"
   ./update_suite.sh
 fi
+<<<<<<< HEAD
+=======
+
+>>>>>>> 21cc469... start_suite.sh adapted for existing vs new suites
