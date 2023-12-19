@@ -13,7 +13,11 @@ rmi_belgium_timecrit_mgmt@@lists.ecmwf.int
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 
 set -x
@@ -26,7 +30,11 @@ rm -f $WDIR/*
 d_FG=${d_CYCLE}/$YYYY/$MM/$DD/$RR
 if [ ! -e ${d_FG}/first_guess ] ; then
   echo ERROR: ${d_FG}/first_guess not found.
+<<<<<<< HEAD
   exit 1
+=======
+  ERR_CODE=A-101 ;  InfoAbort   ${ERR_CODE}
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 fi
 
 # create a "temporary" analysis_canari file?
@@ -43,7 +51,11 @@ if [[ $SURFACE = "surfex" ]] ; then
     cp ${d_FG}/first_guess_sfx $WDIR
   else
     echo ERROR: $WDIR/first_guess_sfx not found.
+<<<<<<< HEAD
     exit 1
+=======
+    ERR_CODE=A-109  ;  InfoAbort     ${ERR_CODE}
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
   fi
 fi
 
@@ -56,4 +68,8 @@ fi
 #ln -sf $WDIR/first_guess_orig $WDIR/analysis
 #[[ $SURFACE = "surfex" ]] && ln -sf $WDIR/first_guess_sfx $WDIR/analysis_sfx
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

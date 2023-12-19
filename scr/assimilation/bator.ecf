@@ -11,7 +11,11 @@ If this task fails:
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <settings_odb.h>
 @include <@ENV_ALADIN@>
@@ -52,8 +56,15 @@ export TIME_INIT_YYYYMMDD=${YYYY}${MM}${DD}
 export TIME_INIT_HHMMSS=${RR}0000
 
 export EC_PROFILE_HEAP=0
+<<<<<<< HEAD
 
 #OBSLIST=(${OBSTYPES//,/ })
+=======
+# SET OBSTYPE VARIABLE ACCORDING TO THE ASSIM MODE ( surface or upper_air FAMILY ) 
+if   [ ${ASSIM_LABEL} == "surface" ] ; then  OBSTYPES=${OBSTYPES_SURFACE}
+elif [ ${ASSIM_LABEL} == "upper" ]   ; then  OBSTYPES=${OBSTYPES_UPPER} ; fi
+
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 for obstype in ${OBSTYPES}; do
   if [[ $obstype == radar ]] ; then
@@ -70,7 +81,15 @@ for obstype in ${OBSTYPES}; do
 
   #{d_BIN}1=/home/idehmous/pack/43t2_bf.11.modes_INTEL1700c.x/bin
   #d_BIN=/home/cvah/pack/43t2_bf11_bator_mars/bin
+<<<<<<< HEAD
   ln -sf ${d_BIN}/BATOR BATOR
+=======
+  if [ @BATOR:""@ ] ; then
+    ln -s @BATOR:@ BATOR
+  else
+    ln -sf ${d_BIN}/BATOR BATOR
+  fi
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
   ln -sf ${d_BIN}/odbtools.x shuffle
   ln -sf ${d_BIN}/ioassign ioassign
 
@@ -100,7 +119,11 @@ for obstype in ${OBSTYPES}; do
 #  export BUFR_TABLES="/ec/res4/hpcperm/cv6/NR/MF_BUFR/"
   # NAMELIST GPS 
   #cp -f ${d_ETC}/list_gpssol_ar13 list_gpssol
+<<<<<<< HEAD
   cp -f ${d_ETC}/list_gpssol list_gpssol
+=======
+  cp -f ${d_ETC}/@LIST_GPSSOL:list_gpssol@ list_gpssol
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
   # NAMELIST BATOR 
   cp -f ${d_NAMELIST}/namel_bator NAMELIST
@@ -158,8 +181,28 @@ for obstype in ${OBSTYPES}; do
   # rm -rf $obstype
 done
 
+<<<<<<< HEAD
 # SAVE THE ODB ???
 #cd $d_ODB
 #tar cvf ECMA_raw.tar ECMA.*
 
 @include <@TAIL:tail.h@>
+=======
+set -x 
+# CHECK THAT AT LEAST 1 POOL CONTAINS DATA
+# (Necessary for screening )
+ipool=0
+while [ ${ipool} -le $((${BATOR_NBPOOL} + 1 )) ] 
+   do
+   ipool=$(( ${ipool} + 1 ))
+   echo $ipool  
+   if [ -f  ${d_BATOR}/ECMA.${obstype}/${ipool}/body  ] ; then
+      echo "ODB contains data in the pool #: ${ipool}"
+      break
+   elif [ ${ipool} -gt ${BATOR_NBPOOL} ] ; then
+      ERR_CODE=A-104 ;  InfoAbort   ${ERR_CODE}
+   fi
+done
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

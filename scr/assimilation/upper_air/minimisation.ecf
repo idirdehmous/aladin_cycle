@@ -1,5 +1,6 @@
 #!/bin/bash 
 @manual
+<<<<<<< HEAD
 3dVar
 @end
 
@@ -8,6 +9,20 @@
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
+=======
+Task  : Minimisation 
+Reads the compressed ODB produced by the screening containing the selected upper-air data 
+INPUT : compressed ODB, first guess  and Bmatrix background covariances matrix  
+OUTPUT: MXMINI999+999 which corresponds to the analysis,a combination of the first guess 
+        and interpolated observations
+        The analysis is used as initial conditions in the next forecast . 
+@end
+
+@include <@HPC_HEADER@>
+@include <head.h>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings_odb.h>
 
 # WORKING DIRECTORY 
@@ -16,7 +31,16 @@ cd ${d_3DVAR}
 rm -rf *
 
 # BINARIES 
+<<<<<<< HEAD
 ln -sf ${d_BIN}/MASTERODB    MASTERODB
+=======
+#d_BIN=/home/cvah/pack/43t2_bf11_bator_ec#1/bin
+if [ @MASTERODB_MINIM:""@ ] ; then
+  ln -sf @MASTERODB_MINIM:@ MASTERODB
+else
+  ln -sf ${d_BIN}/MASTERODB    MASTERODB
+fi
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 ln -sf ${d_BIN}/ioassign     ioassign 
 
 # CONSTANT FILES
@@ -27,7 +51,13 @@ cp -f ${d_ETC}/amv_p_and_tracking_error .
 
 # FIXME: make sure you use the /right/ input file!
 #        e.g. after surface assimilation
+<<<<<<< HEAD
 f_guess=${d_GUESS}/first_guess_canari
+=======
+
+# GET THE FIRST GUESS WITH ISBA FIELDS 
+f_guess=${d_GUESS}/first_guess_isba
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 ln -sf  $f_guess ICMRFMINI0000
 ln -sf  $f_guess ICMSHMINIINIT
 ln -sf  $f_guess ICMSHMINIIMIN
@@ -37,21 +67,47 @@ cp ICMRFMINI0000 MXMINI999+0000
 
 # NAMELIST 
 NAMELIST="$( for nn in $NAMELIST_MINIM ; do echo ${d_NAMELIST}/$nn ; done )"
+<<<<<<< HEAD
 cat ${NAMELIST} | \
   sed -e "s/NPROC=.*/NPROC=$NPROC/"   \
   -e "s/NPRGPNS=.*/NPRGPNS=$NPRGPNS/" \
   -e "s/NPRGPEW=.*/NPRGPEW=$NPRGPEW/" \
   -e "s/NPRTRV=.*/NPRTRV=$NPRTRV/"    \
   -e "s/NPRTRW=.*/NPRTRW=$NPRTRW/"    \
+=======
+#cat ${NAMELIST} | \
+#  sed -e "s/NPROC=.*/NPROC=$NPROC/"   \
+#  -e "s/NPRGPNS=.*/NPRGPNS=$NPRGPNS/" \
+#  -e "s/NPRGPEW=.*/NPRGPEW=$NPRGPEW/" \
+#  -e "s/NPRTRV=.*/NPRTRV=$NPRTRV/"    \
+#  -e "s/NPRTRW=.*/NPRTRW=$NPRTRW/"    \
+#  -e "s/NSTRIN=.*/NSTRIN=$NPROC/"     \
+#  -e "s/NSTROUT=.*/NSTROUT=$NPROC/"   \
+#      > fort.4 
+cat ${NAMELIST} | \
+  sed -e "s/NPROC=.*/NPROC=$NPROC/"   \
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
   -e "s/NSTRIN=.*/NSTRIN=$NPROC/"     \
   -e "s/NSTROUT=.*/NSTROUT=$NPROC/"   \
       > fort.4 
 
+<<<<<<< HEAD
 # GET THE ODB (CCMA FORMAT)
 #cp  -f    ${d_ODB}/CCMA_${RUNDATE}.tar     CCMA_minim.tar
 cycledir=${d_CYCLE}/$YYYY/$MM/$DD/$RR
 tar -xvf ${cycledir}/CCMA_screen_${RUNDATE}.tar
 
+=======
+# GET THE ODB PRODUCED BY THE SCREENING (CCMA FORMAT)
+if [ -f  ${d_ODB}/CCMA_screen_${RUNDATE}.tar ] ; then  
+   cp  -f    ${d_ODB}/CCMA_screen_${RUNDATE}.tar     CCMA_minim.tar
+   tar -xvf CCMA_minim.tar
+else 
+   ERR_CODE=A-124
+   SuiteAbort  @ECF_NAME@  "${ERR_CODE}"
+fi  
+ 
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 # ENVIRONNMENT ODB CCMA 
 export ODB_CCMA_CREATE_DIRECT=1
@@ -70,6 +126,7 @@ export ODB_CCMA_POOLMASK_FILE=${d_3DVAR}/var_db/CCMA/CCMA.poolmask
 # COPY OF THE NEW IOASSIGN FILE (CREATED IN E002)
 cp -f ${d_3DVAR}/CCMA/IOASSIGN        ${d_3DVAR}/IOASSIGN
 
+<<<<<<< HEAD
 # LINK THE BACKGROUND  CROSS-COVARIANCES FILES (B MATRIX )
 ln -sf ${d_JB}/stabbal    stabal96.bal
 ln -sf ${d_JB}/stabcv     stabal96.cv
@@ -85,5 +142,34 @@ tar -cf CCMA_minim_${RUNDATE}.tar CCMA
 cp -f CCMA_minim_${RUNDATE}.tar $cycledir
 
 @include <@TAIL:tail.h@>
+=======
+# LINK WITH v11 pack   
+rm -f    MASTERODB  
+ln -sf   /home/cvah/pack/43t2_bf11_bator_ec#1/bin/MASTERODB  MASTERODB
+
+# LINK THE BACKGROUND  CROSS-COVARIANCES FILES (B MATRIX ) , 
+# _su CORRESPONDS TO Spin-Up MODE B MATRIX COMPUTATION 
+ln -sf ${d_JB}/Jb_ar13_su/stabbal    stabal96.bal
+ln -sf ${d_JB}/Jb_ar13_su/stabcv     stabal96.cv
+
+# RUN  
+$MPIRUN ./MASTERODB    >out.log  2>err.log ||  {
+  ERR_CODE=A-122 ;  ${ERR_CODE}
+}
+
+# SAVE THE ANALYSIS 
+cp -f  MXMINI999+0000  ${d_GUESS}/analysis  
+
+# ODB ARCHIVE 
+tar -cvf   CCMA_minim_${RUNDATE}.tar CCMA*
+cp  -f     CCMA_minim_${RUNDATE}.tar ${d_ODB}/. 
+
+# SAVE TO CYCLE DIR 
+cd ${d_ODB}
+cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+cp CCMA_minim_${RUNDATE}.tar   ${cyclepath}/.  
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 

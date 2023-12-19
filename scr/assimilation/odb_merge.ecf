@@ -11,7 +11,11 @@ If this task fails:
 
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <settings_odb.h>
 @include <@ENV_ALADIN@>
@@ -24,8 +28,11 @@ cd $WDIR
 # Retrieve necessary programs 
 #----------------------------
  
+<<<<<<< HEAD
 #{d_BIN}1=/home/idehmous/pack/43t2_bf.11.modes_INTEL1700c.x/bin
 #{d_BIN}=/home/idehmous/pack/43t2_bf11_bator#3/bin
+=======
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 ln -sf ${d_BIN}/odbtools.x shuffle
 ln -sf ${d_BIN}/ioassign ioassign
 
@@ -35,11 +42,18 @@ ln -sf ${d_BIN}/ioassign ioassign
 export PATH=.:$PATH
 ln -sf ${MERGE_IOASSIGN}  merge_ioassign
 ln -sf ${CREATE_IOASSIGN} create_ioassign
+<<<<<<< HEAD
 #OBSLIST=(${OBSTYPES//,/ })
 
 # MERGE SUB-BASES 
 #------------------------------------
 out_BASE=ECMA     #"VERY IMPORTANT"
+=======
+
+# MERGE SUB-BASES 
+#------------------------------------
+out_BASE=ECMA
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 rm -rf ${out_BASE}
 #------------------------------------
 export SWAPP_ODB_IOASSIGN=$WDIR/ioassign
@@ -70,6 +84,14 @@ export EC_PROFILE_HEAP=0
 # IT COULD HAPPEN THAT A DIRECTORY EXISTS FOR A GIVEN 
 # SUB-BASE BUT IS EMPTY ( WITHOUT POOL DIRECTORY AND "body" TABLE)
 #OBSTYPE=(synop  amdar temp )
+<<<<<<< HEAD
+=======
+
+# SET OBSTYPE VARIABLE ACCORDING TO THE ASSIM MODE ( surface or upper_air FAMILY ) 
+if   [ ${ASSIM_LABEL} == "surface" ] ; then  OBSTYPES=${OBSTYPES_SURFACE}
+elif [ ${ASSIM_LABEL} == "upper" ]   ; then  OBSTYPES=${OBSTYPES_UPPER} ; fi
+
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 cd $WDIR
 merge_list=""
 for obstype  in ${OBSTYPES}; do
@@ -84,6 +106,7 @@ for obstype  in ${OBSTYPES}; do
 done
 
 if [[ ! "$merge_list" ]] ; then
+<<<<<<< HEAD
   echo There are no observations available at all!
   echo Can not run merge_ioassign.
   echo Can not run data assimilation.
@@ -91,6 +114,16 @@ if [[ ! "$merge_list" ]] ; then
 else
   ./merge_ioassign -d $WDIR $merge_list
   ls -al ECMA.synop/1
+=======
+  ERR_CODE=A-104 ; InfoAbort   ${ERR_CODE}
+#  echo There are no observations available at all!
+#  echo Can not run merge_ioassign.
+#  echo Can not run data assimilation.
+#  echo NO > NO_DATA
+else
+  ./merge_ioassign -d $WDIR $merge_list
+#  ls -al ECMA.synop/1
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
   unset merge_list
 
   export IOASSIGN=$WDIR/${out_BASE}/IOASSIGN 
@@ -114,6 +147,7 @@ else
   [[ -e ${d_ODB} ]] || mkdir -p $d_ODB
   # "surface" or "upper" !!!
   label=${ASSIM_LABEL}
+<<<<<<< HEAD
 #  rm -rf $d_ODB/ECMA_${label}*
 #  mv -f  ECMA_merged.tar ${d_ODB}/ECMA_${label}_${RUNDATE}.tar
   cycledir=${d_CYCLE}/$YYYY/$MM/$DD/$RR
@@ -122,3 +156,13 @@ else
 fi
 
 @include <@TAIL:tail.h@>
+=======
+  rm -rf $d_ODB/ECMA_${label}*
+  cp ECMA_merged.tar ${d_ODB}/ECMA_${label}_${RUNDATE}.tar
+  cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+  mkdir -p $cyclepath
+  mv -f  ECMA_merged.tar ${cyclepath}/ECMA_${label}_${RUNDATE}.tar
+fi
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

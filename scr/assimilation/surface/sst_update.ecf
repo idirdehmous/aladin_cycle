@@ -1,5 +1,9 @@
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@>
 #-- create directory
@@ -94,4 +98,8 @@ ENDF
 fi
 
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

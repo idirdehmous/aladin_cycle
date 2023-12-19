@@ -1,5 +1,9 @@
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 
 cycledir=${d_CYCLE}/$YYYY/$MM/$DD/$RR
@@ -46,4 +50,8 @@ if [[ ${arch_cycle} == yes ]] ; then
   fi
 fi
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

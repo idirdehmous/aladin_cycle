@@ -1,5 +1,9 @@
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -29,4 +33,8 @@ cp fort.11 ${d_GUESS}/analysis
 # make sure the file is really physically copied before triggering forecast:
 sync
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

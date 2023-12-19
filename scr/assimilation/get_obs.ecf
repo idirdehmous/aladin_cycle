@@ -12,11 +12,16 @@ If it fails, first look at output.
   - is there a problem with eccodes (bufr_copy) or the BUFR file (corrupted BUFR message)
   - is the working directory available (ws1 or ws2)
 
+<<<<<<< HEAD
 Final result should be files  <obstype>s_${RUNDATE}00.bufr.
+=======
+Final result should be files  <obstype>_${RUNDATE}00.bufr.
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 In case it is impossible to create the output BUFR file:
   - warn RMI asap
   - If all else fails, and there is no other way: set the whole assimilation family to complete. The Forecast family will then start. It will fail twice (missing analysis). But manually restarting a third time (ECF_TRYNO=3) it will continue by using the first guess (thus skipping assimilation alltogether).
+<<<<<<< HEAD
 
 @end
 @include <@HPC_HEADER@>
@@ -30,6 +35,35 @@ rm -f $ofile
 
 OBS_PATH_REALTIME=/ec/vol/msbackup
 OBS_PATH_ARCHIVE=/ec/scratch/cv6/OBS/$YYYY/$MM/$DD
+=======
+@end
+@include <@HPC_HEADER@>
+@include <head.h>
+@include <settings.h>
+
+module load  ecmwf-toolbox/2022.03.0.0  
+
+# REALTIME DATA ,THE BUFR FILES DESSIMINATED BY ECMWF 
+# CONTAIN THE FOLLOWING DATA TYPE ( dataCategory BUFR TABLE C13 )
+# 
+# 0,1 SURFACE DATA -LAND 
+# SUBCATEGORY :/2/3/4/7/28/140/147/165/170/172/176/178
+# 9   SURFACE DATA -SEA
+# SUBCATEGORY :/11/12/13/14/19/21/22/23/180/181/182
+# 2   UPPER AIR SOUNDING -NOT STELLITE 
+# SUBCATEGORY :/92/95/96/97/101/102/103/104/105/106/107/109/111/112/113/230/231
+# 4   SINGLE LEVEL UPPER AIR DATA -AMDAR , AIREP , MODE-S 
+# SUBCATEGORY :141/142/143/144/145/146/149
+# 31  OCEANOGRAPHIC DATA
+
+set -x 
+OBS_PATH=/ec/vol/msbackup/
+
+# CHECK WORKDIR ( ASSUMED TO BE CREATED BY init_suite )
+if [ ! -d ${d_OBS} ] ; then mkdir -p ${d_OBS} ; fi
+#cd ${d_OBS}
+#rm -f *
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 if [[ $REALTIME == "yes" ]] ; then
   # get 6h obs files from /ec/vol/msbackup/
@@ -40,14 +74,20 @@ if [[ $REALTIME == "yes" ]] ; then
       ;;
     03|09|15|21)
     # at intermediate times, we combine two BUFR files
+<<<<<<< HEAD
 #      rd1=`dateincr -h $RUNDATE -3 `
 #      rd2=`dateincr -h $RUNDATE +3 `
+=======
+#      rd1=`dateincr -h $rundate -3 `
+#      rd2=`dateincr -h $rundate +3 `
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
       rd1=`date -u -d "${YYYY}${MM}${DD} ${RR} -3 hours" +%Y%m%d%H`
       rd2=`date -u -d "${YYYY}${MM}${DD} ${RR} +3 hours" +%Y%m%d%H`
       filelist="BUFR0001${rd1}.DAT BUFR0001${rd2}.DAT"
       ;;
   esac
 
+<<<<<<< HEAD
 # Filter the BUFR files for dataCategory
   for ff in $filelist ; do
     for cat in 0 1 ; do
@@ -63,3 +103,101 @@ else
 fi
 
 @include <@TAIL:tail.h@>
+=======
+# Filter the BUFR files for dataCategory and subcategories
+# CREATE obs DIR FOR SURFACE AND UPPER AIR 
+  if [ ${ASSIM_LABEL} == "surface" ] ; then
+     SURFDIR=${d_ASSIM}/obs
+     if [ ! -d ${SURFDIR} ] ; then mkdir -p ${SURFDIR}  ; fi
+     rm -f     ${SURFDIR}/*     
+     # CHECK AND COPY THE OBS FILES
+     for file in ${filelist} ; do
+         if    [ -f ${OBS_PATH}/${file} ]  ; then  cp -f  ${OBS_PATH}/${file}  ${SURFDIR}/.
+         else  ERR_CODE=A-110  ; InfoAbort  ${ERR_CODE}  ;  fi
+     done
+
+# ENTER THE DIR & GET SYNOP  
+   cd ${SURFDIR}
+   CATS="0 1"
+   for file in ${filelist} ; do
+     for cat in ${CATS}    ; do
+        bufr_copy -w dataCategory=${cat} ${file}  ${file}_synop_${cat}  & 
+     done   
+   done  
+   wait  
+   cat *_synop_*    >>  synop_${YYYY}${MM}${DD}${RR}00.bufr
+   rm  *_synop_*   
+   
+   # MV TO COMMON obs DIR AND CLEAN 
+   #mv   synop_${YYYY}${MM}${DD}${RR}00.bufr   ${d_OBS}/.
+   #rm   -rf   ${SURFDIR} 
+
+# UPPER AIR 
+   elif [ ${ASSIM_LABEL} == "upper" ] ; then  
+   UPPDIR=${d_ASSIM}/obs
+   if [ ! -d ${UPPDIR} ] ; then mkdir -p ${UPPDIR}  ; fi
+   rm -f     ${UPPDIR}/*
+
+   # CHECK AND COPY THE OBS FILES 
+   #(WE ARE NOT CHECKING THE FILES TWICE ! ,JUST TO BE SURE THEY'RE THERE IF REQUEUED  )
+   for file in ${filelist} ; do
+       if    [ -f ${OBS_PATH}/${file} ]  ; then  cp -f  ${OBS_PATH}/${file}  ${UPPDIR}/.
+       else  ERR_CODE=A-110  ; InfoAbort  ${ERR_CODE}  ;  fi
+   done
+
+# GET AMDAR , TEMP  & GPSSOL
+    cd ${UPPDIR}
+    SUBCATS="142 144 146 101 102 109 110"
+    for file in  ${filelist} ; do  
+        for  SubCat  in  ${SUBCATS}  ; do   
+
+       case ${SubCat}  in  
+        142|144|146)  # AMDAR 
+     	  bufr_copy -w  dataSubCategory=${SubCat}  ${file}  ${file}_amdar_${SubCat}  & ;;
+        101|102|109)  # TEMP
+     	  bufr_copy -w  dataSubCategory=${SubCat}  ${file}  ${file}_temp_${SubCat}   & ;; 
+        110)          # GPSSOL 
+	  bufr_copy -w  dataSubCategory=${SubCat}  ${file}  ${file}_gpssol_${SubCat} & ;;
+       esac  
+       done  
+   done
+   wait  
+   # CONCATENATE FILES 
+   cat *_amdar_*    >>  amdar_${YYYY}${MM}${DD}${RR}00.bufr
+   cat *_temp_*     >>  temp_${YYYY}${MM}${DD}${RR}00.bufr
+   cat *_gpssol_*   >>  gpssol_${YYYY}${MM}${DD}${RR}00.bufr
+
+   rm *_amdar_*  *_temp_*  *_gpssol_* 
+
+   # MV TO COMMON obs DIR AND CLEAN 
+   #mv amdar* temp_*  gpssol_*  ${d_OBS}/.
+   #rm   -rf  ${UPPDIR}
+
+  fi  
+
+  
+else  # DELAYED MODE, GET DATA FROM ARCHIVE 
+# CALL Gts or Mars REQUESTS FUNCTIONS
+cd  ${d_ASSIM}/obs
+ case $OBS_SOURCE in
+    mars|MARS )
+      for obstype in $OBSTYPES ; do GetMarsObs ${obstype} ${RUNDATE} 3 ; done
+      ;;
+    gts|GTS|rmi|RMI )
+      for obstype in $OBSTYPES ; do GetRmiObs ${obstype} ${RUNDATE}  ; done
+      ;;
+    ecfs|ECFS )
+      for obstype in $OBSTYPES ; do ecp ${OBS_PATH_ARCHIVE}/${obstype}_${RUNDATE}00.bufr . ; done
+      ;;
+    arch|ARCH )
+      for obstype in $OBSTYPES ; do cp ${OBS_PATH_ARCHIVE}/${obstype}_${RUNDATE}00.bufr . ; done
+      ;;
+    * )
+      ERR_CODE=A-108 ;   InfoAbort    ${ERR_CODE}
+      ;;
+  esac
+
+fi  
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

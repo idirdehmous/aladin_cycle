@@ -11,7 +11,11 @@ If the script fails at its 3rd attempt (ECF_TRYNO >= 3) in an operational contex
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -150,10 +154,18 @@ sed -e "s/!.*//"  \
 
 #-- running the master (add || CANARI_FAIL=yes to avoid an error that is trapped by ecflow)
 ln -sf ${d_BIN}/MASTERODB .
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 CANARI_FAIL=no
 $MPIRUN ./MASTERODB > out.log 2> err.log || CANARI_FAIL=yes
 
 if [[ $CANARI_FAIL = yes || ! -e ICMSHANAL+0000 ]] ; then
+<<<<<<< HEAD
+=======
+  ERR_CODE=A-115 ; InfoAbort    ${ERR_CODE}
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
   echo CANARI failure!
   echo ======================================
   echo NODE.001_01
@@ -179,6 +191,7 @@ else
   # FIXME: is re-linking "analysis" OK?
   #        it's just for emergencies, of course
 #  ln -sf ${d_GUESS}/first_guess_canari ${d_GUESS}/analysis
+<<<<<<< HEAD
   [[ $SURFACE = surfex ]] && {
 #    rm ${d_GUESS}/analysis_sfx # IF we use cp : make sure it is no longer a link!
     mv -f ICMSHANAL+0000.sfx ${d_GUESS}/analysis_sfx
@@ -187,14 +200,33 @@ fi
 
 
 
+=======
+ if [ ${SURFACE} = surfex ] ; then  
+#    rm ${d_GUESS}/analysis_sfx # IF we use cp : make sure it is no longer a link!
+    mv -f ICMSHANAL+0000.sfx ${d_GUESS}/analysis_sfx
+ else 
+   ERR_CODE=A-116 ; InfoAbort  ${ERR_CODE}
+ fi
+fi
+
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 # try to avoid triggering next steps before the file is physically on the disc:
 sync
 # save updated ECMA data base to $d_ODB
 cd ${d_BATOR}
 tar -cvf  ECMA_canari_${RUNDATE}.tar  ECMA  ECMA.*
+<<<<<<< HEAD
 cycledir=${d_CYCLE}/$YYYY/$MM/$DD/$RR
 mkdir -p $cycledir
 #mv ECMA_canari_${RUNDATE}.tar ${d_ODB}
 mv ECMA_canari_${RUNDATE}.tar $cycledir
 
 @include <@TAIL:tail.h@>
+=======
+cp ECMA_canari_${RUNDATE}.tar ${d_ODB}
+cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+mkdir -p $cyclepath
+mv ECMA_canari_${RUNDATE}.tar $cyclepath
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

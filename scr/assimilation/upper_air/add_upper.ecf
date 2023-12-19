@@ -4,7 +4,11 @@
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -118,6 +122,10 @@ cp -f  ${d_NAMELIST}/namel_add_nhf             fort.4
 $MPIRUN  -np 1   ./ADDSURF
 mv fort.11     ${d_GUESS}/analysis_${RUNDATE}
 
+<<<<<<< HEAD
 %include <@TAIL:tail.h@>
+=======
+%include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 

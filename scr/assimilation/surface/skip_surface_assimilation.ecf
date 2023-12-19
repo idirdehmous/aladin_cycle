@@ -12,7 +12,11 @@ Note that this will only work if there is a first guess available.
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@> # not really necessary...
 
@@ -33,5 +37,9 @@ ecflow_client --event SKIP_CANARI
 # ln -sf $WDIR/first_guess $WDIR/analysis_canari
 # echo $RUNDATE > $WDIR/NO_CANARI
 # SEND A MAIL
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 

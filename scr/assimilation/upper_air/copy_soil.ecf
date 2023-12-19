@@ -9,7 +9,11 @@ The result may serve as:
 @end
 
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
+=======
+@include <head.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
@@ -41,11 +45,15 @@ cat ${NAMELIST} | sed \
   -e "s/{nproc}/$NPROC/" \
   > fort.4
 
+<<<<<<< HEAD
 if [ -e ${d_BIN}/MASTERODB_PP ] ; then
   ln -sf ${d_BIN}/MASTERODB_PP MASTERODB
 else
   ln -sf ${d_BIN}/MASTERODB MASTERODB
 fi
+=======
+ln -sf ${d_BIN}/MASTERODB_PP MASTERODB
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 $MPIRUN ./MASTERODB >out.log 2>err.log || {
   echo "There was a problem"
   exit 1
@@ -55,4 +63,8 @@ cp PF${CNMEXP}${DOMAIN}+0000 ${d_GUESS}/analysis
 # make sure the file is really physically copied before triggering forecast:
 sync
 
+<<<<<<< HEAD
 @include <@TAIL:tail.h@>
+=======
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts

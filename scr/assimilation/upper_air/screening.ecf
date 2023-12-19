@@ -3,20 +3,41 @@
 blabla
 @end
 @include <@HPC_HEADER@>
+<<<<<<< HEAD
 @include <@HEAD:head.h@>
 @include <settings.h>
 @include <@ENV_ALADIN@>
 
+=======
+@include <head.h>
+@include <settings.h>
+@include <@ENV_ALADIN@>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 @include <settings_odb.h>
 
 
 # WORKING DIRECTORY 
+<<<<<<< HEAD
 mkdir -p  $d_SCREENING
 cd $d_SCREENING
 rm -rf *
 
 # BINARIES 
 ln -sf  ${d_BIN}/MASTERODB MASTERODB
+=======
+mkdir -p  ${d_SCREENING}
+cd ${d_SCREENING}
+rm -rf *
+
+# BINARIES 
+#d_BIN=/ec/res4/hpcperm/cv6/accord/pack/rmi_43t2_bf.11_OMPIIFC2140_EC/bin
+#d_BIN=/home/cvah/pack/43t2_bf11_bator_ec#1/bin
+if [ @MASTERODB_MINIM:""@ ] ; then
+  ln -sf @MASTERODB_MINIM:@ MASTERODB
+else
+  ln -sf  ${d_BIN}/MASTERODB MASTERODB
+fi
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 ln -sf  ${d_BIN}/ioassign ioassign
 
 # IOASSIGN SCRIPTS 
@@ -41,6 +62,7 @@ cp -f ${d_ETC}/errgrib .
 # WITH ADDED ISBA SURFACE FIELDS
 # FIXME: which first guess? addfields may not even be necessary?
 #cp ${d_ADDFIELDS}/first_guess_isba ICMSHSCREINIT
+<<<<<<< HEAD
 cp ${d_GUESS}/first_guess_canari ICMSHSCREINIT
 # NAMELIST
 NAMELIST="$( for nn in $NAMELIST_SCREENING ; do echo ${d_NAMELIST}/$nn ; done )"
@@ -64,6 +86,47 @@ mkdir var_db
 cd var_db
 # MAKE COPY OF ODB 
 tar xvf ${cycledir}/ECMA_upper_${RUNDATE}.tar
+=======
+
+if [[ ! -e ${d_GUESS}/first_guess_isba ]] ; then  
+  ERR_CODE=A-120 ; InfoAbort  ${ERR_CODE}
+else 
+  cp ${d_GUESS}/first_guess_isba    ICMSHSCREINIT
+fi 
+
+# NAMELIST
+NAMELIST="$( for nn in $NAMELIST_SCREENING ; do echo ${d_NAMELIST}/$nn ; done )"
+
+NPRGPNS=$NPROC 
+NPRGPEW=1 
+NPRTRV=$NPROC
+NPRTRW=1 
+
+cat $NAMELIST | sed                   \
+  -e "s/{nproc}/$NPROC/"              \
+  -e "s/NPROC=.*/NPROC=$NPROC/"       \
+  -e "s/NPRGPNS=.*/NPRGPNS=$NPRGPNS/" \
+  -e "s/NPRGPEW=.*/NPRGPEW=$NPRGPEW/" \
+  -e "s/NPRTRV=.*/NPRTRV=$NPRTRV/"    \
+  -e "s/NPRTRW=.*/NPRTRW=$NPRTRW/"    \
+  -e "s/NSTRIN=.*/NSTRIN=$NPROC/"     \
+  -e "s/NSTROUT=.*/NSTROUT=$NPROC/"   \
+> fort.4
+
+
+set -x
+# MAKE COPY OF ODB 
+if  [ -f $d_ODB/ECMA_upper_${RUNDATE}.tar ] ; then  
+    cp -f  $d_ODB/ECMA_upper_${RUNDATE}.tar    ECMA_merged.tar 
+else 
+  ERR_CODE=A-123
+  InfoAbort   ${ERR_CODE}
+fi 
+
+mkdir var_db
+cd var_db
+tar xvf ../ECMA_merged.tar
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 cd ${d_SCREENING}
 # ODB DATA ENVIRONNEMENT 
@@ -82,6 +145,10 @@ export ODB_SRCPATH_CCMA=${d_SCREENING}/var_db/CCMA
 export ODB_DATAPATH_CCMA=${d_SCREENING}/var_db/CCMA
 export ODB_CCMA_CREATE_POOLMASK=1
 export ODB_CCMA_POOLMASK_FILE=${d_SCREENING}/var_db/CCMA/CCMA.poolmask
+<<<<<<< HEAD
+=======
+export BATOR_NBPOOL=${OBS_NPOOL}
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
 cp  -f ${d_SCREENING}/var_db/ECMA/IOASSIGN    ${d_SCREENING}/var_db/IOASSIGN
 
@@ -95,6 +162,7 @@ cat IOASSIGN >> ${d_SCREENING}/var_db/ECMA/IOASSIGN
 cp -f  ${d_SCREENING}/var_db/ECMA/IOASSIGN ${d_SCREENING}/var_db/CCMA/IOASSIGN
 cp -f  ${d_SCREENING}/var_db/ECMA/IOASSIGN ${d_SCREENING}/var_db/IOASSIGN
 
+<<<<<<< HEAD
 # RUN 
 # NOTE: an error in screening run may not trigger an abort!
 $MPIRUN ./MASTERODB  >out.log 2>err.log || {
@@ -118,4 +186,54 @@ cp -f ${db_tarfile} ${cycledir}/${db_tarfile}
 #fi
 
 @include <@TAIL:tail.h@>
+=======
+# LINK WITH v11 pack   
+rm -f    MASTERODB  
+ln -sf   /home/cvah/pack/43t2_bf11_bator_ec#1/bin/MASTERODB  MASTERODB 
+
+# RUN 
+# NOTE: an error in screening run may not trigger an abort!
+$MPIRUN ./MASTERODB  >out.log 2>err.log || {   
+# LOOK FOR "END CNT0" PATTERN IN NODE FILE  
+PATTERN=$( echo $( grep  -o  "END CNT0"  NODE.001_01 ) | cut -c1-3  )
+if [ ${PATTERN} == "END" ] ; then
+   echo "SCREENING RUN SUCCESSFULLY !"
+else
+  ERR_CODE=A-121
+  SuiteAbort  @ECF_NAME@  "${ERR_CODE}"
+fi
+}
+
+# LAST ODB CHECK  
+i=0
+ipool=0
+while [ ${i} -lt ${BATOR_NBPOOL} ]  
+do
+  i=$(( ${i} + 1 ))
+  echo $i  
+  if [ -f  ${d_SCREENING}/var_db/CCMA/${i}/body  ] ; then
+     echo "POOL ${i} CONTAINS DATA IN body "  
+     else 
+          "NO DATA IN POOL ${i}"
+	  ipool=$(( ${ipool} + 1 ))
+        continue        
+     fi  
+done  
+if [ ${ipool} -gt ${BATOR_NBPOOL} ] ; then  
+   ERR_CODE=A-104
+   SuiteAbort  @ECF_NAME@  "${ERR_CODE}"
+   else  
+   cd var_db
+   db_tarfile=CCMA_${RUNDATE}.tar
+   tar cvf ${db_tarfile} CCMA
+   cp -f ${db_tarfile} ${d_ODB}/CCMA_screen_${RUNDATE}.tar
+fi
+
+# ARCHIVE TO CYCLE DIR 
+cd ${d_ODB}
+cyclepath=${d_CYCLE}/$YYYY/$MM/$DD/$RR
+cp  -f  CCMA_screen_${RUNDATE}.tar  ${cyclepath}/.
+
+@include <tail.h>
+>>>>>>> 1f25b41... update the get_obs.ecf and bator scripts
 
