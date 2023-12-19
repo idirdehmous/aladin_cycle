@@ -39,6 +39,7 @@ usxa
 -sycs
 -syjt
 
+<<<<<<< HEAD
 # RMI Research staff (read-only)
 -cv6 # Alex
 -cvah # Idir
@@ -51,4 +52,16 @@ cvz # Dimitra
 cvq # Stephane
 cvj # Alain
 cvs # Joffrey
+=======
+# RMI staff (read-only)
+-cv6 # Alex
+-cur # oper
+-cvz # Dimitra
+-cvq # Stephane
+-cvah # Idir
+-cvj # Alain
+-cv9 # Daan
+-cu0k # Michiel
+-cvs # Joffrey
+>>>>>>> ef07a9b... update ini/ATOS/AR13.ini for 3Dvar
 
