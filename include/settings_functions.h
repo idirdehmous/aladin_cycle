@@ -4,6 +4,7 @@
 
 function show_warning {
   local message=$1
+<<<<<<< HEAD
   local wpath=${2:-""}
   if [[ $wpath == "" ]] ; then
     wpath="/@SUITE@ /@SUITE@/cycle/@THIS_RUN@"
@@ -18,6 +19,11 @@ function clear_warning {
   local wpath=${1:-/@SUITE@}
   # make sure the command doesn't fail if there is no current warning
   ecflow_client --alter=delete label WARNING $wpath > /dev/null 2>&1 || :
+=======
+  ecflow_client --alter=add label WARNING "$message" /$SUITE > /dev/null 2>&1 || {
+    ecflow_client --alter=change label WARNING "$message" /$SUITE
+  }
+>>>>>>> 279a370... add setting_alerts.h file , more verbosity in the suite
 }
 
 
@@ -89,3 +95,73 @@ function fa_validdate {
 
 
 
+<<<<<<< HEAD
+=======
+function  GetMarsObs () {
+
+# obsdate in hours, obsrange in minutes (+/- range around the hour)
+# GET OBS HOUR AND WINDOW ( RANGE )
+OBSTYPE=$1                   # ${1:-2022070100}
+OBSDATE=$2                   # ${3:-60}
+OBSRANGE=$3
+GROUP=CONV                   # COULD BECOME AN ARGUMENT LET'S START WITH  CONV DATA
+
+set -x
+# GET TIME WINDOW RANGE  +/- OBSRANGE  ( 3h )
+DATE=`dateincr -m ${OBSDATE}00 -${OBSRANGE}`
+YYYY=`echo $DATE | cut -c 1-4`
+MM=`echo $DATE | cut -c 5-6`
+DD=`echo $DATE | cut -c 7-8`
+HH=`echo $DATE | cut -c 9-10`
+mm=`echo $DATE | cut -c11-12`
+
+# Time=2100, range=360 (=6h),
+# Denotes observations ---> from 21:00 to 03:00 next day
+
+TIME=${HH}${mm}
+RANGE=$(( ${OBSRANGE} * 2 ))
+
+# MARS OBSERVATION ID IDENTIFICATIONS  (SEE https://apps.ecmwf.int/odbgov )
+# LAND-SURFACE SYNOP: LSD=1/2/3/4/
+# SEA: SSD               =9/11/12/13/14/19/20/21/22/23
+# VERTICAL: VSNS=91/92/95/96/97/101/102/103/104/105/106/107/109/111/112/113
+# GPSSOL  : 110
+# METAR   : 140
+
+# OBSTYPE ID
+SYNOP="1/2/3/4/9/11/12/13/14/19/20/21/22/23"
+AMDAR="144/145/146"
+TEMP="101/102/103/106/109"
+GPSSOL="110"
+MODES="150"
+
+# AREA DEFINITION
+# NORTH/WEST/SOUTH/EAST or "GLOBE" FOR ALL
+AREA=65/-20/40/20
+
+case ${OBSTYPE} in
+     synop ) PARAM=${SYNOP}  ;;
+     amdar ) PARAM=${AMDAR}  ;;
+     temp  ) PARAM=${TEMP}   ;;
+     gpssol) PARAM=${GPSSOL} ;;
+     modes ) PARAM=${MODES}  ;;
+esac
+
+REQFILE=${OBSTYPE}_${OBSDATE}.req
+# START MARS REQUEST BODY
+echo RETRIEVE,                                                                                          > ${REQFILE}
+echo CLASS    = od,STREAM= OPER,EXPVER=1,REPRES= BUFR, TYPE=OB,OBSGROUP= ${GROUP},DUPLICATES = remove, >> ${REQFILE}
+
+# META DATA
+echo OBSTYPE  = ${PARAM},  DATE= ${YYYY}${MM}${DD},TIME= ${TIME},RANGE = ${RANGE},AREA = ${AREA},      >> ${REQFILE}
+
+# TARGET OUTFILE
+echo TARGET   = ${OBSTYPE}_${OBSDATE}00.bufr   							       >> ${REQFILE}
+
+# RUN REQUEST
+mars ${REQFILE}  1>  ${OBSTYPE}_${OBSDATE}_mars.log   2>&1
+}
+
+
+
+>>>>>>> 279a370... add setting_alerts.h file , more verbosity in the suite

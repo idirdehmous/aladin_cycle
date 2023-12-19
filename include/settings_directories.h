@@ -56,11 +56,19 @@ d_FC=$WORKDIR/forecast
 d_DFI=$WORKDIR/dfi
 d_POST=$WORKDIR/post
 if [[ $ASSIMILATION == yes ]] ; then
+<<<<<<< HEAD
   d_GUESS=${WORKDIR}/assimilation/guess
   d_OBS=${WORKDIR}/assimilation/obs
   d_ODB=${WORKDIR}/assimilation/ODB
 # the following directories depend on "upper" or "surface" assimilation step
   d_ASSIM=$WORKDIR/assimilation/${ASSIM_LABEL}
+=======
+  d_ASSIM=$WORKDIR/assimilation/${ASSIM_LABEL}
+  d_GUESS=${WORKDIR}/assimilation/guess
+  d_OBS=${d_ASSIM}/obs
+  d_ODB=${d_ASSIM}/ODB
+# the following directories depend on "upper" or "surface" assimilation step
+>>>>>>> 279a370... add setting_alerts.h file , more verbosity in the suite
   d_BATOR=${d_ASSIM}/bator
   d_ADDFIELDS=${d_ASSIM}/addfields
   d_SST=${d_ASSIM}/sst
